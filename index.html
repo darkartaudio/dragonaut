@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragonaut</title>
 
+    <!--Style-->
     <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://csdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+
+    <!--Fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@500&display=swap" rel="stylesheet">
 
     <!--Favicon-->
     <link rel="shortcut icon" href="./img/favicon.ico" type="image/x-icon">
@@ -15,22 +22,24 @@
 </head>
 
 <body>
-    <h1 id="tagline">Dragonaut | Save the countryside from a pack of ravaging dragons!</h1>
-    
     <div id="game-container">
         <main>
             <canvas id="game"></canvas>
         </main>
-        
+
         <div id="story">
+            <div id="tagline">
+                Dragonaut | Save the countryside from a pack of ravaging dragons!
+            </div>
         </div>
-        
+
         <div id="choices">
             <div id="setup-container">
                 <div id="setup">
                     <form id="setup-form">
                         <h2>Create Your Character</h2>
-                        <input type="text" name="character-name" placeholder="Name..." required>
+                        <label for="character-name">Name:</label>
+                        <input type="text" name="character-name" required>
                         <label for="character-class">Class:</label>
                         <select id="character-class" name="character-class" required>
                             <option value="warrior">Warrior</option>

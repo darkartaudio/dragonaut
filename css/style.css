@@ -5,11 +5,11 @@ body {
 }
 
 body {
-    padding-top: 1em;
+    font-family: 'Cormorant Unicase', serif;
     text-align: center;
-    background-color: black;
-    background-size: cover;
-    background-repeat: space;
+    background-color: rgb(70, 67, 67);
+    /* background-size: cover;
+    background-repeat: space; */
 }
 
 canvas {
@@ -18,17 +18,10 @@ canvas {
     width: 100%;
 }
 
-#setup-container {
-    /* max-width: 90%; */
-    /* background-color: rgb(168, 50, 50); */
-    /* padding: 1em;
-    grid-gap: 1em;
-    grid-template-columns: 1fr; */
-}
-
 #game-container {
-    max-width: 50%;
-    background-color: rgb(168, 50, 50);
+    max-width: 60%;
+    /* background-color: rgb(96, 39, 187); */
+    background-image: url('../img/brick.png');
     margin: 0 auto;
     padding: 1em;
     display: grid;
@@ -53,12 +46,6 @@ main {
     grid-area: game;
 }
 
-/* #setup {
-    background-image: url('../img/stone-wall.png');
-    width: 100%;
-    height: 100%;
-} */
-
 #story {
     grid-area: story;
 }
@@ -75,18 +62,15 @@ main {
 #setup-form {
     background-color: white;
     color: black;
-    /* width: 30%; */
-    /* margin: 0 auto; */
-    /* padding: 1em; */
+    padding: 1em;
 }
 
-#setup-form button {
-    /* display: block; */
-    /* margin: 0 auto; */
+#setup-form h2 {
+    margin-bottom: 1em;
 }
 
-#setup-form input {
-    /* display: block; */
-    /* margin: 0 auto; */
+#setup-form input,
+#setup-form select {
+    margin-right: 1em;
 }
 
