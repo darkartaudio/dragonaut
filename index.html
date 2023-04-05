@@ -7,9 +7,44 @@
     <title>Dragonaut</title>
 
     <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="./img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./img/favicon.ico" type="image/x-icon">
 </head>
+
 <body>
-    <script src="./js/app.js"></script>
+    <h1 id="tagline">Dragonaut | Save the countryside from a pack of ravaging dragons!</h1>
+    
+    <div id="game-container">
+        <main>
+            <canvas id="game"></canvas>
+        </main>
+        
+        <div id="story">
+        </div>
+        
+        <div id="choices">
+            <div id="setup-container">
+                <div id="setup">
+                    <form id="setup-form">
+                        <h2>Create Your Character</h2>
+                        <input type="text" name="character-name" placeholder="Name..." required>
+                        <label for="character-class">Class:</label>
+                        <select id="character-class" name="character-class" required>
+                            <option value="warrior">Warrior</option>
+                            <option value="wizard">Wizard</option>
+                            <option value="ranger">Ranger</option>
+                        </select>
+                        <button id="start-game" type="submit">Start Game</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src=" ./js/app.js"></script>
 </body>
+
 </html>
