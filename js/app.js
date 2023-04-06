@@ -9,12 +9,15 @@ const ctx = game.getContext('2d');
 let character;
 let runGame;
 
+
 // LEGEND
 // G - green dragon, W - white dragon, R - red dragon, B - black dragon
 // g - green book, w - white book, r - red book, b - black book
 // C - character
+// 0 - wall tile
+// x - floor tile
 let map = [
-//    0    1    2
+    //    0    1    2
     ['0', 'G', '0'], // 00
     ['x', 'x', 'x'], // 01
     ['x', 'g', 'x'], // 02
@@ -37,18 +40,28 @@ let map = [
 const wallTile = document.createElement('img');
 wallTile.src = './img/stone-wall.png';
 
+const floorTile = document.createElement('img');
+floorTile.src = './img/stone-floor.png';
+
+
+const tileImages = {
+    '0': wallTile,
+    'x': floorTile,
+    // 'C': character.img
+    // add more characters and corresponding images here
+};
 
 // EVENT LISTENERS
 setupForm.addEventListener('submit', (e) => {
     e.preventDefault();
-
+    
     let charName = setupForm.elements['character-name'].value;
     let charClass = setupForm.elements['character-class'].value;
-
+    
     character = new Character(charName, charClass);
-
+    
     // TODO: setup map, add items and enemies
-
+    
     // runGame = setInterval(gameLoop, 60);
     runGame = gameLoop();
     document.addEventListener('keydown', movementHandler);
@@ -70,8 +83,8 @@ class Character {
         this.class = charClass;
         this.health = 10 + Math.floor(Math.random() * 6); // start with 10 plus 0-5 hit points
         this.attackTypes = [];
-        this.height = 32;
-        this.width = 32;
+        this.height = 16;
+        this.width = 16;
         this.x = 1 * 32;
         this.y = 16 * 32;
         this.imgURL = '';
@@ -157,21 +170,29 @@ function gameLoop() {
     ctx.clearRect(0, 0, game.width, game.height);
     
     // TODO: draw map
-    // for (let i = 0; i < map.length; i++) {
-    //     for (let j = 0; j < map[i].length; j++) {
-    //         // console.log(map[i][j]);
-    //         switch (map[i][j]) {
-    //             case '0':
-    //                 ctx.drawImage(wallTile, j * 32, i * 32, 32, 32);
-    //                 break;
-    //         }
-    //     }
-    // }
-                
+    renderMap();
+    
     // TODO: for each Dragon/Item, render if alive
     // TODO: for each Dragon/Item, check for collision
-                
+    
     character.render();
+}
+
+function renderMap() {
+    for (let i = 0; i < map.length; i++) {
+        for (let j = 0; j < map[i].length; j++) {
+            // console.log(map[i][j]);
+            // switch (map[i][j]) {
+            //     case '0':
+            //         ctx.drawImage(wallTile, j * 32, i * 32, 32, 32);
+            //         break;
+            // }
+            const tileImage = tileImages[map[i][j]];
+            if (tileImage) {
+                ctx.drawImage(tileImage, j * 32, i * 32, 32, 32);
+            }
+        }
+    }
 }
 
 // ====================== COLLISION DETECTION ======================= //
