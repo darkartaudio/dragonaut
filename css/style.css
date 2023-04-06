@@ -13,7 +13,7 @@ body {
 }
 
 canvas {
-    background-image: url('../img/stone-floor.png');
+    /* background-image: url('../img/stone-floor.png'); */
     height: 544px;
     width: 96px;
 }

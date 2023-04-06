@@ -1,4 +1,6 @@
+// =================================================================================
 // GLOBAL DOM / VARIABLES
+// =================================================================================
 const game = document.querySelector('#game');
 const story = document.querySelector('#story');
 const choices = document.querySelector('#choices');
@@ -9,15 +11,16 @@ const ctx = game.getContext('2d');
 let character;
 let runGame;
 
-
-// LEGEND
+// =================================================================================
+// MAP LEGEND
 // G - green dragon, W - white dragon, R - red dragon, B - black dragon
 // g - green book, w - white book, r - red book, b - black book
 // C - character
 // 0 - wall tile
 // x - floor tile
+// =================================================================================
 let map = [
-    //    0    1    2
+//    0    1    2
     ['0', 'G', '0'], // 00
     ['x', 'x', 'x'], // 01
     ['x', 'g', 'x'], // 02
@@ -37,58 +40,97 @@ let map = [
     ['0', 'C', '0']  // 16
 ];
 
+// =================================================================================
+// IMAGES FOR USE WITH MAP
+// =================================================================================
 const wallTile = document.createElement('img');
 wallTile.src = './img/stone-wall.png';
 
 const floorTile = document.createElement('img');
 floorTile.src = './img/stone-floor.png';
 
+const blackBook = document.createElement('img');
+blackBook.src = './img/book-black.png';
 
-const tileImages = {
-    '0': wallTile,
-    'x': floorTile,
-    // 'C': character.img
-    // add more characters and corresponding images here
-};
+const redBook = document.createElement('img');
+redBook.src = './img/book-red.png';
 
+const whiteBook = document.createElement('img');
+whiteBook.src = './img/book-white.png';
+
+const greenBook = document.createElement('img');
+greenBook.src = './img/book-green.png';
+
+const blackDragon = document.createElement('img');
+blackDragon.src = './img/dragon-black.png';
+
+const redDragon = document.createElement('img');
+redDragon.src = './img/dragon-red.png';
+
+const whiteDragon = document.createElement('img');
+whiteDragon.src = './img/dragon-white.png';
+
+const hydraFive = document.createElement('img');
+hydraFive.src = './img/hydra5.png';
+
+const hydraFour = document.createElement('img');
+hydraFour.src = './img/hydra4.png';
+
+const hydraThree = document.createElement('img');
+hydraThree.src = './img/hydra3.png';
+
+const hydraTwo = document.createElement('img');
+hydraTwo.src = './img/hydra2.png';
+
+const hydraOne = document.createElement('img');
+hydraOne.src = './img/hydra1.png';
+
+// =================================================================================
 // EVENT LISTENERS
+// =================================================================================
+function removeMovementHandler() {
+    document.removeEventListener('keydown', movementHandler);
+}
+
 setupForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    let charName = setupForm.elements['character-name'].value;
-    let charClass = setupForm.elements['character-class'].value;
+    charName = setupForm.elements['character-name'].value;
+    charClass = setupForm.elements['character-class'].value;
     
     character = new Character(charName, charClass);
     
     // TODO: setup map, add items and enemies
     
-    // runGame = setInterval(gameLoop, 60);
-    runGame = gameLoop();
+    runGame = setInterval(gameLoop, 60);
+    console.log(character);
+    // removeMovementHandler();
     document.addEventListener('keydown', movementHandler);
 });
 
-
-// ====================== SETUP FOR CANVAS RENDERING ======================= //
+// =================================================================================
+// SETUP FOR CANVAS RENDERING
 // 2D rendering context for canvas element
 // This is used for drawing shapes, text, images, etc.
+// =================================================================================
 game.setAttribute('height', getComputedStyle(game)['height']);
 game.setAttribute('width', getComputedStyle(game)['width']);
 
-// console.log(game.height, game.width);
-
-// ====================== ENTITIES ======================= //
+// =================================================================================
+// ENTITIES
+// =================================================================================
 class Character {
     constructor(charName, charClass) {
         this.name = charName;
         this.class = charClass;
         this.health = 10 + Math.floor(Math.random() * 6); // start with 10 plus 0-5 hit points
         this.attackTypes = [];
-        this.height = 16;
-        this.width = 16;
+        this.height = 32;
+        this.width = 32;
         this.x = 1 * 32;
         this.y = 16 * 32;
         this.imgURL = '';
-
+   
         switch (charClass) {
             case 'warrior':
                 this.imgURL = './img/warrior.png';
@@ -101,12 +143,10 @@ class Character {
                 break;
         }
 
-
         this.img = document.createElement('img');
         this.img.setAttribute('src', this.imgURL);
 
         this.render = function () {
-            // console.log(this.img, this.x, this.y, this.width, this.height);
             ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
         }
     }
@@ -134,7 +174,9 @@ class Item {
     }
 }
 
-// ====================== KEYBOARD LOGIC ======================= //
+// =================================================================================
+// KEYBOARD LOGIC
+// =================================================================================
 function movementHandler(e) {
     // TODO: handle game boundaries
     switch (e.key) {
@@ -164,38 +206,51 @@ function movementHandler(e) {
 // TODO: handle screen scrolling
 // TODO: check for collision with enemies/items after movement
 
-// ====================== GAME PROCESSES ======================= //
-function gameLoop() {
-    // Clear the canvas
-    ctx.clearRect(0, 0, game.width, game.height);
-    
-    // TODO: draw map
-    renderMap();
-    
-    // TODO: for each Dragon/Item, render if alive
-    // TODO: for each Dragon/Item, check for collision
-    
-    character.render();
-}
-
+// =================================================================================
+// GAME PROCESSES
+// =================================================================================
 function renderMap() {
     for (let i = 0; i < map.length; i++) {
         for (let j = 0; j < map[i].length; j++) {
-            // console.log(map[i][j]);
-            // switch (map[i][j]) {
-            //     case '0':
-            //         ctx.drawImage(wallTile, j * 32, i * 32, 32, 32);
-            //         break;
-            // }
-            const tileImage = tileImages[map[i][j]];
-            if (tileImage) {
-                ctx.drawImage(tileImage, j * 32, i * 32, 32, 32);
+            switch (map[i][j]) {
+                case '0':
+                    ctx.drawImage(wallTile, j * 32, i * 32, 32, 32);
+                    break;
+                default:
+                    ctx.drawImage(floorTile, j * 32, i * 32, 32, 32);
+                    break;
             }
         }
     }
 }
 
-// ====================== COLLISION DETECTION ======================= //
+function renderDragons() {
+}
+
+function renderItems() {
+}
+
+function gameLoop() {
+    // Clear the canvas
+    ctx.clearRect(0, 0, game.width, game.height);
+    
+    renderMap();
+    character.render();
+    // TODO: for each Dragon/Item, render if alive
+    renderDragons();
+    renderItems();
+    
+    // TODO: for each Dragon/Item, check for collision
+    checkForCollisions();
+}
+
+// =================================================================================
+// COLLISION DETECTION
+// =================================================================================
+function checkForCollisions() {
+    
+}
+
 function detectHit(obj1, obj2) {
     let hitTest = (
         obj1.y + obj1.height > obj2.y &&
