@@ -1,15 +1,10 @@
 // GLOBAL DOM / VARIABLES
-
 const game = document.querySelector('#game');
 const story = document.querySelector('#story');
 const choices = document.querySelector('#choices');
 const setupForm = document.querySelector('#setup-form');
 
 const ctx = game.getContext('2d');
-
-// document.querySelector('#game-container').style.display = 'none';
-
-
 
 let character;
 let runGame;
@@ -23,8 +18,7 @@ setupForm.addEventListener('submit', (e) => {
 
     character = new Character(charName, charClass);
 
-    // document.querySelector('#setup-container').remove();
-    // document.querySelector('#game-container').style.display = 'grid';
+    // TODO: setup map, add items and enemies
 
     runGame = setInterval(gameLoop, 60);
     document.addEventListener('keydown', movementHandler);
@@ -37,7 +31,7 @@ setupForm.addEventListener('submit', (e) => {
 game.setAttribute('height', getComputedStyle(game)['height']);
 game.setAttribute('width', getComputedStyle(game)['width']);
 
-console.log(game.height, game.width);
+// console.log(game.height, game.width);
 
 // ====================== ENTITIES ======================= //
 class Character {
@@ -62,10 +56,30 @@ class Character {
                 this.img = "../img/ranger.png";
                 break;
         }
+
+        this.render = function () {
+            ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+        }
     }
+
+    // TODO: attack functionality
+    // TODO: receive attack functionality
+    // TODO: evade/resist attack functionality
 }
 
-class Monster {
+// TODO: Dragon class (black dragon, red dragon, blue dragon, green five-headed dragon)
+class Dragon {
+    constructor() {
+
+    }
+
+    // TODO: attack functionality
+    // TODO: receive attack functionality
+    // TODO: evade/resist attack functionality
+}
+
+// TODO: 
+class Item {
     constructor() {
 
     }
@@ -73,6 +87,7 @@ class Monster {
 
 // ====================== KEYBOARD LOGIC ======================= //
 function movementHandler(e) {
+    // TODO: handle game boundaries
     switch (e.key) {
         case 'w':
         case 'ArrowUp':
@@ -96,10 +111,19 @@ function movementHandler(e) {
     }
 }
 
+// TODO: disable movement while in combat
+// TODO: handle screen scrolling
+// TODO: check for collision with enemies/items after movement
+
 // ====================== GAME PROCESSES ======================= //
 function gameLoop() {
     // Clear the canvas
     ctx.clearRect(0, 0, game.width, game.height);
+
+    // TODO: for each Dragon, render if alive
+    // TODO: for each Item, render if alive
+
+    // character.render();
 }
 
 // ====================== COLLISION DETECTION ======================= //
