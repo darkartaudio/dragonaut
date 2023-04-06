@@ -13,13 +13,13 @@ body {
 }
 
 canvas {
-    background-image: url('../img/stone-wall.png');
-    height: 100%;
-    width: 100%;
+    background-image: url('../img/stone-floor.png');
+    height: 544px;
+    width: 96px;
 }
 
 #game-container {
-    width: 600px;
+    max-width: 600px;
     /* background-color: rgb(96, 39, 187); */
     background-image: url('../img/brick.png');
     margin: 1em auto;

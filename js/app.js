@@ -31,8 +31,12 @@ let map = [
     ['x', 'x', 'x'], // 13
     ['x', 'b', 'x'], // 14
     ['x', 'x', 'x'], // 15
-    ['0', 'C', 'x']  // 16
+    ['0', 'C', '0']  // 16
 ];
+
+const wallTile = document.createElement('img');
+wallTile.src = './img/stone-wall.png';
+
 
 // EVENT LISTENERS
 setupForm.addEventListener('submit', (e) => {
@@ -45,7 +49,8 @@ setupForm.addEventListener('submit', (e) => {
 
     // TODO: setup map, add items and enemies
 
-    runGame = setInterval(gameLoop, 60);
+    // runGame = setInterval(gameLoop, 60);
+    runGame = gameLoop();
     document.addEventListener('keydown', movementHandler);
 });
 
@@ -67,8 +72,8 @@ class Character {
         this.attackTypes = [];
         this.height = 32;
         this.width = 32;
-        this.x = 16;
-        this.y = 1;
+        this.x = 1 * 32;
+        this.y = 16 * 32;
         this.imgURL = '';
 
         switch (charClass) {
@@ -88,6 +93,7 @@ class Character {
         this.img.setAttribute('src', this.imgURL);
 
         this.render = function () {
+            // console.log(this.img, this.x, this.y, this.width, this.height);
             ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
         }
     }
@@ -120,22 +126,22 @@ function movementHandler(e) {
     // TODO: handle game boundaries
     switch (e.key) {
         case 'w':
-        case 'ArrowUp':
+        // case 'ArrowUp':
             character.y - 32 >= 0 ? (character.y -= 32) : null;
             break;
         
         case 's':
-        case 'ArrowDown':
+        // case 'ArrowDown':
             character.y + 32 <= game.height - character.height ? (character.y += 32) : null;
             break;
 
         case 'a':
-        case 'ArrowLeft':
+        // case 'ArrowLeft':
             character.x - 32 >= 0 ? (character.x -= 32) : null;
             break;
         
         case 'd':
-        case 'ArrowRight':
+        // case 'ArrowRight':
             character.x + 32 <= game.width - character.width ? (character.x += 32) : null;
             break;
     }
@@ -149,12 +155,22 @@ function movementHandler(e) {
 function gameLoop() {
     // Clear the canvas
     ctx.clearRect(0, 0, game.width, game.height);
-
+    
     // TODO: draw map
-
+    // for (let i = 0; i < map.length; i++) {
+    //     for (let j = 0; j < map[i].length; j++) {
+    //         // console.log(map[i][j]);
+    //         switch (map[i][j]) {
+    //             case '0':
+    //                 ctx.drawImage(wallTile, j * 32, i * 32, 32, 32);
+    //                 break;
+    //         }
+    //     }
+    // }
+                
     // TODO: for each Dragon/Item, render if alive
     // TODO: for each Dragon/Item, check for collision
-
+                
     character.render();
 }
 
