@@ -5,6 +5,7 @@ const game = document.querySelector('#game');
 const story = document.querySelector('#story');
 const choices = document.querySelector('#choices');
 const setupForm = document.querySelector('#setup-form');
+const gameStatus = document.querySelector('#game-status');
 
 const ctx = game.getContext('2d');
 
@@ -13,30 +14,30 @@ let runGame;
 
 // =================================================================================
 // MAP LEGEND
-// G - green dragon, W - white dragon, R - red dragon, B - black dragon
-// g - green book, w - white book, r - red book, b - black book
-// C - character
-// 0 - wall tile
-// x - floor tile
+// G = green dragon, W = white dragon, R = red dragon, B = black dragon
+// g = green book, w = white book, r = red book, b = black book
+// C = character
+// 0 = wall tile
+// - = floor tile
 // =================================================================================
 let map = [
 //    0    1    2
     ['0', 'G', '0'], // 00
-    ['x', 'x', 'x'], // 01
-    ['x', 'g', 'x'], // 02
-    ['x', 'x', 'x'], // 03
+    ['-', '-', '-'], // 01
+    ['-', 'g', '-'], // 02
+    ['-', '-', '-'], // 03
     ['0', 'W', '0'], // 04
-    ['x', 'x', 'x'], // 05
-    ['x', 'w', 'x'], // 06
-    ['x', 'x', 'x'], // 07
+    ['-', '-', '-'], // 05
+    ['-', 'w', '-'], // 06
+    ['-', '-', '-'], // 07
     ['0', 'R', '0'], // 08
-    ['x', 'x', 'x'], // 09
-    ['x', 'r', 'x'], // 10
-    ['x', 'x', 'x'], // 11
+    ['-', '-', '-'], // 09
+    ['-', 'r', '-'], // 10
+    ['-', '-', '-'], // 11
     ['0', 'B', '0'], // 12
-    ['x', 'x', 'x'], // 13
-    ['x', 'b', 'x'], // 14
-    ['x', 'x', 'x'], // 15
+    ['-', '-', '-'], // 13
+    ['-', 'b', '-'], // 14
+    ['-', '-', '-'], // 15
     ['0', 'C', '0']  // 16
 ];
 
@@ -97,8 +98,11 @@ setupForm.addEventListener('submit', (e) => {
     
     charName = setupForm.elements['character-name'].value;
     charClass = setupForm.elements['character-class'].value;
+    setupForm.remove();
+
     
     character = new Character(charName, charClass);
+    gameStatus.style.display = 'block';
     
     // TODO: setup map, add items and enemies
     
@@ -248,7 +252,7 @@ function gameLoop() {
 // COLLISION DETECTION
 // =================================================================================
 function checkForCollisions() {
-    
+
 }
 
 function detectHit(obj1, obj2) {

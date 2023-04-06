@@ -75,3 +75,7 @@ main {
     margin-right: 1em;
 }
 
+#game-status {
+    display: none;
+}
+
