@@ -9,6 +9,31 @@ const ctx = game.getContext('2d');
 let character;
 let runGame;
 
+// LEGEND
+// G - green dragon, W - white dragon, R - red dragon, B - black dragon
+// g - green book, w - white book, r - red book, b - black book
+// C - character
+let map = [
+//    0    1    2
+    ['0', 'G', '0'], // 00
+    ['x', 'x', 'x'], // 01
+    ['x', 'g', 'x'], // 02
+    ['x', 'x', 'x'], // 03
+    ['0', 'W', '0'], // 04
+    ['x', 'x', 'x'], // 05
+    ['x', 'w', 'x'], // 06
+    ['x', 'x', 'x'], // 07
+    ['0', 'R', '0'], // 08
+    ['x', 'x', 'x'], // 09
+    ['x', 'r', 'x'], // 10
+    ['x', 'x', 'x'], // 11
+    ['0', 'B', '0'], // 12
+    ['x', 'x', 'x'], // 13
+    ['x', 'b', 'x'], // 14
+    ['x', 'x', 'x'], // 15
+    ['0', 'C', 'x']  // 16
+];
+
 // EVENT LISTENERS
 setupForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -42,20 +67,25 @@ class Character {
         this.attackTypes = [];
         this.height = 32;
         this.width = 32;
-        this.x = 0;
-        this.y = 0;
+        this.x = 16;
+        this.y = 1;
+        this.imgURL = '';
 
         switch (charClass) {
             case 'warrior':
-                this.img = "../img/warrior.png";
+                this.imgURL = './img/warrior.png';
                 break;
             case 'wizard':
-                this.img = "../img/wizard.png";
+                this.imgURL = "./img/wizard.png";
                 break;
             case 'ranger':
-                this.img = "../img/ranger.png";
+                this.imgURL = "./img/ranger.png";
                 break;
         }
+
+
+        this.img = document.createElement('img');
+        this.img.setAttribute('src', this.imgURL);
 
         this.render = function () {
             ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
@@ -67,7 +97,7 @@ class Character {
     // TODO: evade/resist attack functionality
 }
 
-// TODO: Dragon class (black dragon, red dragon, blue dragon, green five-headed dragon)
+// TODO: Dragon class (black dragon, red dragon, white dragon, green five-headed dragon)
 class Dragon {
     constructor() {
 
@@ -120,10 +150,12 @@ function gameLoop() {
     // Clear the canvas
     ctx.clearRect(0, 0, game.width, game.height);
 
-    // TODO: for each Dragon, render if alive
-    // TODO: for each Item, render if alive
+    // TODO: draw map
 
-    // character.render();
+    // TODO: for each Dragon/Item, render if alive
+    // TODO: for each Dragon/Item, check for collision
+
+    character.render();
 }
 
 // ====================== COLLISION DETECTION ======================= //
