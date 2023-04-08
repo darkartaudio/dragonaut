@@ -7,6 +7,7 @@ const game = document.querySelector('#game');
 const story = document.querySelector('#story');
 const storyContainer = document.querySelector('#story-container');
 const choices = document.querySelector('#choices');
+const setupContainer = document.querySelector('#setup-container');
 const setupForm = document.querySelector('#setup-form');
 
 const ctx = game.getContext('2d');
@@ -23,15 +24,13 @@ gameStatus.append(statusName, statusHealth);
 let character;
 let runGame;
 
+// Initialize array for game events
 // Important game events will be added to this array and displayed
-// Starts with 5 empty events for display purposes
-const gameEvents = [
-    '',
-    '',
-    '',
-    '',
-    ''
-];
+const gameEvents = [];
+
+// Initialize arrays for dragons and items
+const dragons = [];
+const items = [];
 
 // =================================================================================
 // MAP LEGEND
@@ -122,7 +121,8 @@ setupForm.addEventListener('submit', (e) => {
     charName = setupForm.elements['character-name'].value;
     charClass = setupForm.elements['character-class'].value;
     character = new Character(charName, charClass);
-    setupForm.remove();
+    setupContainer.remove();
+    choices.style.justifyContent = 'left';
     choices.append(gameStatus);
 
     // add directions to story
@@ -130,6 +130,8 @@ setupForm.addEventListener('submit', (e) => {
     gameEvents.unshift('a - left | d - right | w - up | s - down');
 
     // TODO: add items and enemies
+    addDragons();
+    addItems();
     
     runGame = setInterval(gameLoop, 60);
 
@@ -182,7 +184,7 @@ class Character {
 
         // update game status
         statusName.textContent = this.name;
-        statusHealth.textContent = this.health;
+        statusHealth.textContent = this.health + ' hp';
     }
 
     // TODO: attack functionality
@@ -192,8 +194,21 @@ class Character {
 
 // TODO: Dragon class (black dragon, red dragon, white dragon, green five-headed dragon)
 class Dragon {
-    constructor() {
+    constructor(dragonName, dragonImg, dragonX, dragonY) {
+        this.name = dragonName;
+        this.height = gridSize;
+        this.width = gridSize;
+        this.img = dragonImg;
+        this.x = dragonX;
+        this.y = dragonY;
+        this.alive = true;
+    }
 
+    render() {
+        // if dragon is alive, draw dragon on canvas
+        if (this.alive) {
+            ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        }
     }
 
     // TODO: attack functionality
@@ -203,8 +218,19 @@ class Dragon {
 
 // TODO: 
 class Item {
-    constructor() {
+    constructor(itemName, itemImg, itemX, itemY) {
+        this.name = itemName;
+        this.height = gridSize;
+        this.width = gridSize;
+        this.img = itemImg;
+        this.x = itemX;
+        this.y = itemY;
+        this.alive = true;
+    }
 
+    render() {
+        // if item is alive (hasn't been picked up yet), draw item on canvas
+        ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
     }
 }
 
@@ -236,6 +262,8 @@ function movementHandler(e) {
             targetX = character.x + 1,
             targetY = character.y;
             break;
+        default: // any other key pressed
+            return false; // exit movementHandler and do not execute any further code
     }
 
     if (
@@ -245,12 +273,10 @@ function movementHandler(e) {
         || targetY < 0 // top
         || map[targetY][targetX] === '0' // barrier
     ) {
-        return false; // ie don't move character
+        return false; // don't move character
     } else { // move character
         character.x = targetX;
         character.y = targetY;
-
-        gameEvents.unshift(`Moved to: ${character.x}, ${character.y}`);
     }
 
     // TODO: for each Dragon/Item, check for collision
@@ -264,15 +290,29 @@ function movementHandler(e) {
 // =================================================================================
 // GAME PROCESSES
 // =================================================================================
+function addDragons() {
+    dragons.push(new Dragon('yellow dragon', yellowDragon, 1, 12));
+    dragons.push(new Dragon('red dragon', redDragon, 1, 8));
+    dragons.push(new Dragon('white dragon', whiteDragon, 1, 4));
+    dragons.push(new Dragon('five-headed hydra', hydraFive, 1, 0));
+}
+
+function addItems() {
+    items.push(new Item('yellow book', yellowBook, 1, 14));
+    items.push(new Item('red book', redBook, 1, 10));
+    items.push(new Item('white book', whiteBook, 1, 6));
+    items.push(new Item('green book', greenBook, 1, 2));
+}
+
 function renderMap() {
     for (let i = 0; i < map.length; i++) {
         for (let j = 0; j < map[i].length; j++) {
             switch (map[i][j]) {
                 case '0':
-                    ctx.drawImage(wallTile, j * 32, i * 32, 32, 32);
+                    ctx.drawImage(wallTile, j * gridSize, i * gridSize, gridSize, gridSize);
                     break;
                 default:
-                    ctx.drawImage(floorTile, j * 32, i * 32, 32, 32);
+                    ctx.drawImage(floorTile, j * gridSize, i * gridSize, gridSize, gridSize);
                     break;
             }
         }
@@ -280,9 +320,15 @@ function renderMap() {
 }
 
 function renderDragons() {
+    dragons.forEach((d) => {
+        d.render();
+    })
 }
 
 function renderItems() {
+    items.forEach((i) => {
+        i.render();
+    })
 }
 
 function updateStory() {
