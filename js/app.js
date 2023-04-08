@@ -12,58 +12,21 @@ const setupForm = document.querySelector('#setup-form');
 
 const ctx = game.getContext('2d');
 
-// Set up game status div, which will be displayed when game starts
-const gameStatus = document.createElement('div');
-gameStatus.setAttribute('id', 'game-status');
-const statusName = document.createElement('div');
-statusName.setAttribute('id', 'status-name');
-const statusClass = document.createElement('div');
-statusClass.setAttribute('id', 'status-class');
-const statusHealth = document.createElement('div');
-statusHealth.setAttribute('id', 'status-health');
-gameStatus.append(statusName, statusClass, statusHealth);
 
-// Set up attackButtons div, which will be updated when character finds a new item
-const attackButtons = document.createElement('div');
-attackButtons.setAttribute('id', 'attack-buttons');
-const normalButton = document.createElement('button');
-normalButton.setAttribute('id', 'normal-attack');
-normalButton.setAttribute('class', 'attack-button');
-normalButton.textContent = 'normal attack';
-normalButton.disabled = true;
-const shockButton = document.createElement('button');
-shockButton.setAttribute('id', 'shock-attack');
-shockButton.setAttribute('class', 'attack-button');
-shockButton.textContent = 'shock attack';
-shockButton.disabled = true;
-const fireButton = document.createElement('button');
-fireButton.setAttribute('id', 'fire-attack');
-fireButton.setAttribute('class', 'attack-button');
-fireButton.textContent = 'fire attack';
-fireButton.disabled = true;
-const iceButton = document.createElement('button');
-iceButton.setAttribute('id', 'ice-attack');
-iceButton.setAttribute('class', 'attack-button');
-iceButton.textContent = 'ice attack';
-iceButton.disabled = true;
-const acidButton = document.createElement('button');
-acidButton.setAttribute('id', 'acid-attack');
-acidButton.setAttribute('class', 'attack-button');
-acidButton.textContent = 'acid attack';
-acidButton.disabled = true;
-attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButton);
+// Initialize arrays for dragons and items
+const dragons = [];
+const items = [];
 
 // Initializes player character and variable to contain movmentEngine loop
 let character;
 let runGame;
 
+// Initialize active dragon holder for combat
+let activeDragon;
+
 // Initialize array for game events
 // Important game events will be added to this array and displayed
 const gameEvents = [];
-
-// Initialize arrays for dragons and items
-const dragons = [];
-const items = [];
 
 // =================================================================================
 // MAP LEGEND
@@ -77,7 +40,7 @@ const items = [];
 // other values are for easily visually laying out the map and have no functional effect
 // =================================================================================
 let map = [
-//    0    1    2
+    //    0    1    2
     ['0', 'G', '0'], // 00
     ['-', '-', '-'], // 01
     ['-', 'g', '-'], // 02
@@ -142,6 +105,47 @@ hydraTwo.src = './img/hydra2.png';
 const hydraOne = document.createElement('img');
 hydraOne.src = './img/hydra1.png';
 
+// Set up game status div, which will be displayed when game starts
+const gameStatus = document.createElement('div');
+gameStatus.setAttribute('id', 'game-status');
+const statusName = document.createElement('div');
+statusName.setAttribute('id', 'status-name');
+const statusClass = document.createElement('div');
+statusClass.setAttribute('id', 'status-class');
+const statusHealth = document.createElement('div');
+statusHealth.setAttribute('id', 'status-health');
+gameStatus.append(statusName, statusClass, statusHealth);
+
+// Set up attackButtons div, which will be updated when character finds a new item
+const attackButtons = document.createElement('div');
+attackButtons.setAttribute('id', 'attack-buttons');
+const normalButton = document.createElement('button');
+normalButton.setAttribute('id', 'normal-attack');
+normalButton.setAttribute('class', 'attack-button');
+normalButton.textContent = 'normal attack';
+normalButton.disabled = true;
+const shockButton = document.createElement('button');
+shockButton.setAttribute('id', 'shock-attack');
+shockButton.setAttribute('class', 'attack-button');
+shockButton.textContent = 'shock attack';
+shockButton.disabled = true;
+const fireButton = document.createElement('button');
+fireButton.setAttribute('id', 'fire-attack');
+fireButton.setAttribute('class', 'attack-button');
+fireButton.textContent = 'fire attack';
+fireButton.disabled = true;
+const iceButton = document.createElement('button');
+iceButton.setAttribute('id', 'ice-attack');
+iceButton.setAttribute('class', 'attack-button');
+iceButton.textContent = 'ice attack';
+iceButton.disabled = true;
+const acidButton = document.createElement('button');
+acidButton.setAttribute('id', 'acid-attack');
+acidButton.setAttribute('class', 'attack-button');
+acidButton.textContent = 'acid attack';
+acidButton.disabled = true;
+attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButton);
+
 // =================================================================================
 // EVENT LISTENERS
 // =================================================================================
@@ -152,8 +156,8 @@ function removeMovementHandler() {
 setupForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    // create new character with name and class as chosen by user, then remove
-    // setup form and display game status instead
+    // create new character with name and class as chosen by user,
+    // then remove setup form and display game status instead
     charName = setupForm.elements['character-name'].value;
     charClass = setupForm.elements['character-class'].value;
     character = new Character(charName, charClass);
@@ -189,7 +193,7 @@ class Character {
     constructor(charName, charClass) {
         this.name = charName;
         this.class = charClass;
-        this.health = 10 + Math.floor(Math.random() * 6); // start with 10 plus 0-5 hit points
+        this.health = 50 + Math.floor(Math.random() * 10); // start with 50 plus 0-10 hit points
         this.attackTypes = ['normal'];
         this.height = gridSize;
         this.width = gridSize;
@@ -213,21 +217,48 @@ class Character {
         }
     }
 
-    render() {
-        // draw character on canvas
-        ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
-
-        // update game status
+    updateGameStatus() {
         statusName.textContent = this.name;
         statusClass.textContent = this.class;
         statusHealth.textContent = this.health + ' hp';
 
-        // set all attack buttons to be disabled
-        // if the game is calling render, we're in movement mode and not attack mode
+    }
+    
+    disableAttacks() {
         this.attackTypes.forEach((i) => {
             let btn = document.querySelector(`#${i}-attack`);
             btn.disabled = true;
         });
+    }
+    
+    enableAttacks() {
+        this.attackTypes.forEach((i) => {
+            let btn = document.querySelector(`#${i}-attack`);
+            btn.disabled = false;
+        });
+    }
+    
+    receiveAttack(attackSize, attackType) {
+        this.attackTypes.forEach((a) => {
+            if (a === attackType) {
+                attackSize = Math.floor(attackSize * 0.5);
+                gameEvents.unshift(`${character.name} resists some of the damage.`);
+            }
+        });
+        this.health -= attackSize;
+        this.updateGameStatus();
+    }
+    
+    render() {
+        // draw character on canvas
+        ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+    
+        // update game status
+        this.updateGameStatus();
+    
+        // disable attacks
+        // if the game is calling render, we're in movement mode and not combat mode
+        this.disableAttacks();
     }
 
     // TODO: attack functionality
@@ -250,6 +281,49 @@ class Dragon {
         // if dragon is alive, draw dragon on canvas
         if (this.alive) {
             ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        }
+    }
+
+    attack() {
+        // calculate attack success/damage/message
+        let attackSize = 0;
+        let attackType = '';
+        let attackMsg = `The ${this.name} `;
+
+        let attackRoll = Math.floor(Math.random() * 100);
+        if (attackRoll > 25) { // hit
+            if (attackRoll > 95) { // critical hit, 5 damage
+                attackMsg += 'massacres';
+                attackSize = 5;
+            } else { // normal hit, 3 damage
+                attackMsg += 'hits';
+                attackSize = 3;
+            }
+        } else { // miss, no damage
+            attackMsg += 'misses';
+        }
+
+        attackMsg += ` ${character.name} with its `;
+
+        switch (this.name) {
+            case 'yellow dragon':
+                attackType = 'shock';
+                break;
+            case 'red dragon':
+                attackType = 'fire';
+                break;
+            case 'white dragon':
+                attackType = 'ice';
+                break;
+            case 'green dragon':
+                attackType = 'acid';
+                break;
+        }
+            
+        attackMsg += ` ${attackType} breath!`;
+        gameEvents.unshift(attackMsg);
+        if (attackSize > 0) { // if the attack is a hit
+            character.receiveAttack(attackSize, attackType);
         }
     }
 
@@ -276,21 +350,25 @@ class Item {
         }
     }
 
-    // adds corresponding attack to player
+    // adds corresponding attack to character
     // sets alive = false (i.e. item has been picked up and will no longer render on board)
     pickup() {
         switch(this.name) {
             case 'yellow book':
                 character.attackTypes.push('shock');
+                gameEvents.unshift(`${character.name} learns a shock attack!`);
                 break;
             case 'red book':
                 character.attackTypes.push('fire');
+                gameEvents.unshift(`${character.name} learns a fire attack!`);
                 break;
             case 'white book':
                 character.attackTypes.push('ice');
+                gameEvents.unshift(`${character.name} learns a ice attack!`);
                 break;
             case 'green book':
                 character.attackTypes.push('acid');
+                gameEvents.unshift(`${character.name} learns a acid attack!`);
                 break;
         }
         this.alive = false;
@@ -422,18 +500,28 @@ function movementEngine() {
     updateStory();
 }
 
+function combatEngine() {
+    character.enableAttacks();
+    activeDragon.attack();
+    updateStory();
+}
+
 function combat(d) {
     removeMovementHandler();
-    d.alive = false;
-    document.addEventListener('keydown', movementHandler);
+    clearInterval(runGame);
+    activeDragon = d;
+    updateStory();
+    character.enableAttacks();
+    runGame = setInterval(combatEngine, 5000);
+    // d.alive = false;
+    // document.addEventListener('keydown', movementHandler);
+    // runGame = setInterval(movementEngine, 60);
 }
 
 // =================================================================================
 // COLLISION DETECTION
 // =================================================================================
 function checkForCollisions() {
-    // TODO: for each Dragon/Item, check for collision
-
     dragons.forEach((d) => {
         if(d.alive && d.x === character.x && d.y === character.y) {
             gameEvents.unshift(`${character.name} engages a ${d.name} in glorious combat!`);
