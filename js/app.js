@@ -12,7 +12,7 @@ const setupForm = document.querySelector('#setup-form');
 
 const ctx = game.getContext('2d');
 
-// set up game status div, which will be displayed when game starts
+// Set up game status div, which will be displayed when game starts
 const gameStatus = document.createElement('div');
 gameStatus.setAttribute('id', 'game-status');
 const statusName = document.createElement('div');
@@ -23,10 +23,37 @@ const statusHealth = document.createElement('div');
 statusHealth.setAttribute('id', 'status-health');
 gameStatus.append(statusName, statusClass, statusHealth);
 
-// set up attackButtons div, which will be updated when character finds a new item
+// Set up attackButtons div, which will be updated when character finds a new item
 const attackButtons = document.createElement('div');
 attackButtons.setAttribute('id', 'attack-buttons');
+const normalButton = document.createElement('button');
+normalButton.setAttribute('id', 'normal-attack');
+normalButton.setAttribute('class', 'attack-button');
+normalButton.textContent = 'normal attack';
+normalButton.disabled = true;
+const shockButton = document.createElement('button');
+shockButton.setAttribute('id', 'shock-attack');
+shockButton.setAttribute('class', 'attack-button');
+shockButton.textContent = 'shock attack';
+shockButton.disabled = true;
+const fireButton = document.createElement('button');
+fireButton.setAttribute('id', 'fire-attack');
+fireButton.setAttribute('class', 'attack-button');
+fireButton.textContent = 'fire attack';
+fireButton.disabled = true;
+const iceButton = document.createElement('button');
+iceButton.setAttribute('id', 'ice-attack');
+iceButton.setAttribute('class', 'attack-button');
+iceButton.textContent = 'ice attack';
+iceButton.disabled = true;
+const acidButton = document.createElement('button');
+acidButton.setAttribute('id', 'acid-attack');
+acidButton.setAttribute('class', 'attack-button');
+acidButton.textContent = 'acid attack';
+acidButton.disabled = true;
+attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButton);
 
+// Initializes player character and variable to contain movmentEngine loop
 let character;
 let runGame;
 
@@ -163,7 +190,7 @@ class Character {
         this.name = charName;
         this.class = charClass;
         this.health = 10 + Math.floor(Math.random() * 6); // start with 10 plus 0-5 hit points
-        this.attackTypes = [];
+        this.attackTypes = ['normal'];
         this.height = gridSize;
         this.width = gridSize;
 
@@ -195,9 +222,11 @@ class Character {
         statusClass.textContent = this.class;
         statusHealth.textContent = this.health + ' hp';
 
-        // add buttons for attack types
-        this.attackTypes.forEach((a) => {
-
+        // set all attack buttons to be disabled
+        // if the game is calling render, we're in movement mode and not attack mode
+        this.attackTypes.forEach((i) => {
+            let btn = document.querySelector(`#${i}-attack`);
+            btn.disabled = true;
         });
     }
 
