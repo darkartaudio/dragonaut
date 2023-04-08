@@ -1,21 +1,37 @@
 // =================================================================================
 // GLOBAL DOM / VARIABLES
 // =================================================================================
-const gridSize = 32; // number of pixels in each map square, also corresponds to size of sprites (32 x 32) I'm using
+const gridSize = 32; // number of pixels in each map square, also corresponds to size of character/monster/item sprites (32 x 32)
 
 const game = document.querySelector('#game');
 const story = document.querySelector('#story');
+const storyContainer = document.querySelector('#story-container');
 const choices = document.querySelector('#choices');
 const setupForm = document.querySelector('#setup-form');
 
 const ctx = game.getContext('2d');
+
 // set up game status div, which will be displayed when game starts
 const gameStatus = document.createElement('div');
 gameStatus.setAttribute('id', 'game-status');
-gameStatus.textContent = 'hello!';
+const statusName = document.createElement('div');
+statusName.setAttribute('id', 'status-name');
+const statusHealth = document.createElement('div');
+statusHealth.setAttribute('id', 'status-health');
+gameStatus.append(statusName, statusHealth);
 
 let character;
 let runGame;
+
+// Important game events will be added to this array and displayed
+// Starts with 5 empty events for display purposes
+const gameEvents = [
+    '',
+    '',
+    '',
+    '',
+    ''
+];
 
 // =================================================================================
 // MAP LEGEND
@@ -109,7 +125,10 @@ setupForm.addEventListener('submit', (e) => {
     setupForm.remove();
     choices.append(gameStatus);
 
-    
+    // add directions to story
+    gameEvents.unshift('Gather items and slay dragons!');
+    gameEvents.unshift('a - left | d - right | w - up | s - down');
+
     // TODO: add items and enemies
     
     runGame = setInterval(gameLoop, 60);
@@ -155,10 +174,15 @@ class Character {
                 this.img.setAttribute('src', './img/ranger.png');
                 break;
         }
+    }
 
-        this.render = function () {
-            ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
-        }
+    render() {
+        // draw character on canvas
+        ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+
+        // update game status
+        statusName.textContent = this.name;
+        statusHealth.textContent = this.health;
     }
 
     // TODO: attack functionality
@@ -221,10 +245,12 @@ function movementHandler(e) {
         || targetY < 0 // top
         || map[targetY][targetX] === '0' // barrier
     ) {
-        return false;
-    } else {
+        return false; // ie don't move character
+    } else { // move character
         character.x = targetX;
         character.y = targetY;
+
+        gameEvents.unshift(`Moved to: ${character.x}, ${character.y}`);
     }
 
     // TODO: for each Dragon/Item, check for collision
@@ -259,15 +285,37 @@ function renderDragons() {
 function renderItems() {
 }
 
+function updateStory() {
+    // clear all events from story div
+    let displayedEvents = [...storyContainer.querySelectorAll('p')];
+    while (displayedEvents.length > 0) {
+        displayedEvents[0].parentNode.removeChild(displayedEvents[0]);
+        displayedEvents.shift();
+    }
+
+    // display five latest events to story div
+    // starting at least recent so that most recent displays last
+    for (let i = 4; i >= 0; i--) {
+        if(i < gameEvents.length) {
+            let newEvent = document.createElement('p');
+            newEvent.textContent = gameEvents[i];
+            storyContainer.append(newEvent);
+        }
+    }
+}
+
 function gameLoop() {
     // Clear the canvas
     ctx.clearRect(0, 0, game.width, game.height);
     
     renderMap();
-    character.render();
-    // TODO: for each Dragon/Item, render if alive
+    
     renderDragons();
     renderItems();
+
+    character.render();
+
+    updateStory();
 }
 
 // =================================================================================

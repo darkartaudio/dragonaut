@@ -53,12 +53,8 @@ main {
     grid-area: choices;
 }
 
-#tagline {
-    padding: 1em;
-}
-
 #setup-form,
-#tagline {
+#story-container {
     padding: 1em;
 }
 
@@ -69,4 +65,9 @@ main {
 #setup-form input,
 #setup-form select {
     margin-right: 1em;
+}
+
+#story-container h2,
+#story-container p {
+    margin: 0;
 }
