@@ -17,9 +17,15 @@ const gameStatus = document.createElement('div');
 gameStatus.setAttribute('id', 'game-status');
 const statusName = document.createElement('div');
 statusName.setAttribute('id', 'status-name');
+const statusClass = document.createElement('div');
+statusClass.setAttribute('id', 'status-class');
 const statusHealth = document.createElement('div');
 statusHealth.setAttribute('id', 'status-health');
-gameStatus.append(statusName, statusHealth);
+gameStatus.append(statusName, statusClass, statusHealth);
+
+// set up attackButtons div, which will be updated when character finds a new item
+const attackButtons = document.createElement('div');
+attackButtons.setAttribute('id', 'attack-buttons');
 
 let character;
 let runGame;
@@ -39,6 +45,9 @@ const items = [];
 // C = character
 // 0 = wall tile
 // - = floor tile
+//
+// 0 values are used by renderMap function to create functional barriers
+// other values are for easily visually laying out the map and have no functional effect
 // =================================================================================
 let map = [
 //    0    1    2
@@ -123,17 +132,16 @@ setupForm.addEventListener('submit', (e) => {
     character = new Character(charName, charClass);
     setupContainer.remove();
     choices.style.justifyContent = 'left';
-    choices.append(gameStatus);
+    choices.append(gameStatus, attackButtons);
 
-    // add directions to story
+    // add game directions to story
     gameEvents.unshift('Gather items and slay dragons!');
     gameEvents.unshift('a - left | d - right | w - up | s - down');
-
-    // TODO: add items and enemies
+    
     addDragons();
     addItems();
     
-    runGame = setInterval(gameLoop, 60);
+    runGame = setInterval(movementEngine, 60);
 
     removeMovementHandler();
     document.addEventListener('keydown', movementHandler);
@@ -184,7 +192,13 @@ class Character {
 
         // update game status
         statusName.textContent = this.name;
+        statusClass.textContent = this.class;
         statusHealth.textContent = this.health + ' hp';
+
+        // add buttons for attack types
+        this.attackTypes.forEach((a) => {
+
+        });
     }
 
     // TODO: attack functionality
@@ -192,7 +206,6 @@ class Character {
     // TODO: evade/resist attack functionality
 }
 
-// TODO: Dragon class (black dragon, red dragon, white dragon, green five-headed dragon)
 class Dragon {
     constructor(dragonName, dragonImg, dragonX, dragonY) {
         this.name = dragonName;
@@ -216,7 +229,6 @@ class Dragon {
     // TODO: evade/resist attack functionality
 }
 
-// TODO: 
 class Item {
     constructor(itemName, itemImg, itemX, itemY) {
         this.name = itemName;
@@ -230,7 +242,29 @@ class Item {
 
     render() {
         // if item is alive (hasn't been picked up yet), draw item on canvas
-        ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        if (this.alive) {
+            ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        }
+    }
+
+    // adds corresponding attack to player
+    // sets alive = false (i.e. item has been picked up and will no longer render on board)
+    pickup() {
+        switch(this.name) {
+            case 'yellow book':
+                character.attackTypes.push('shock');
+                break;
+            case 'red book':
+                character.attackTypes.push('fire');
+                break;
+            case 'white book':
+                character.attackTypes.push('ice');
+                break;
+            case 'green book':
+                character.attackTypes.push('acid');
+                break;
+        }
+        this.alive = false;
     }
 }
 
@@ -279,13 +313,10 @@ function movementHandler(e) {
         character.y = targetY;
     }
 
-    // TODO: for each Dragon/Item, check for collision
     checkForCollisions();
 }
 
-// TODO: disable movement while in combat
 // TODO: handle screen scrolling
-// TODO: check for collision with enemies/items after movement
 
 // =================================================================================
 // GAME PROCESSES
@@ -308,10 +339,10 @@ function renderMap() {
     for (let i = 0; i < map.length; i++) {
         for (let j = 0; j < map[i].length; j++) {
             switch (map[i][j]) {
-                case '0':
+                case '0': // barrier
                     ctx.drawImage(wallTile, j * gridSize, i * gridSize, gridSize, gridSize);
                     break;
-                default:
+                default: // non-barrier
                     ctx.drawImage(floorTile, j * gridSize, i * gridSize, gridSize, gridSize);
                     break;
             }
@@ -350,34 +381,41 @@ function updateStory() {
     }
 }
 
-function gameLoop() {
+function movementEngine() {
     // Clear the canvas
     ctx.clearRect(0, 0, game.width, game.height);
     
     renderMap();
-    
     renderDragons();
     renderItems();
-
     character.render();
 
     updateStory();
+}
+
+function combat(d) {
+    removeMovementHandler();
+    d.alive = false;
+    document.addEventListener('keydown', movementHandler);
 }
 
 // =================================================================================
 // COLLISION DETECTION
 // =================================================================================
 function checkForCollisions() {
+    // TODO: for each Dragon/Item, check for collision
 
-}
+    dragons.forEach((d) => {
+        if(d.alive && d.x === character.x && d.y === character.y) {
+            gameEvents.unshift(`${character.name} engages a ${d.name} in glorious combat!`);
+            combat(d);
+        }
+    });
 
-function detectHit(obj1, obj2) {
-    let hitTest = (
-        obj1.y + obj1.height > obj2.y &&
-        obj1.y < obj2.y + obj2.height &&
-        obj1.x + obj1.width > obj2.x &&
-        obj1.x < obj2.x + obj2.width
-    );
-
-    return hitTest;
+    items.forEach((i) => {
+        if(i.alive && i.x === character.x && i.y === character.y) {
+            gameEvents.unshift(`${character.name} finds a ${i.name}.`);
+            i.pickup();
+        }
+    });
 }

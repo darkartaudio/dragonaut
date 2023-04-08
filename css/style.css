@@ -82,6 +82,10 @@ main {
     font-weight: bold;
 }
 
+#status-class {
+    font-style: italic;
+}
+
 #game-status {
     margin: 1em;
 }
