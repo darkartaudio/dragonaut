@@ -355,9 +355,7 @@ class Character {
         this.disableAttacks();
     }
 
-    // TODO: attack functionality
-    // TODO: receive attack functionality
-    // TODO: evade/resist attack functionality
+    // TODO: evade/resist attack functionality?
 }
 
 class Dragon {
@@ -449,12 +447,11 @@ class Dragon {
         this.alive = false;
         gameEvents.unshift(`${character.name} has slain the ${this.name}!`);
 
-        // exit combat and restart movement engine
-        resumeMovement();
+        // exit combat
+        endCombat();
     }
 
-    // TODO: evade/resist attack functionality
-    // TODO: die
+    // TODO: evade/resist attack functionality?
 }
 
 class Item {
@@ -649,14 +646,38 @@ function combatEngine() {
     
     updateStory();
 }
-function resumeMovement() {
+function endCombat() {
     clearTimeout(attackTimeout); // stop player's attack buttons from becoming activated
 
     clearInterval(runGame); // stop combat engine
 
-    // start movement engine
-    document.addEventListener('keydown', movementHandler);
-    runGame = setInterval(movementEngine, 60);
+    // if there are any dragons left alive
+    if(dragonsAreAlive()) {
+        // start movement engine
+        document.addEventListener('keydown', movementHandler);
+        runGame = setInterval(movementEngine, 60);
+    } else { // all of the dragons are dead, you win!
+        winGame();
+    }
+}
+
+// returns true if any of the dragons are alive, otherwise false
+function dragonsAreAlive() {
+    for (let i = 0; i < dragons.length; i++) {
+        if (dragons[i].alive) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function winGame() {
+    gameEvents = [];
+    gameEvents.unshift(`${character.name} hath smote the ravaging horde of dragons!`);
+    gameEvents.unshift('The country folk may now enjoy a life of peace and prosperity!');
+    gameEvents.unshift(`Hail ${character.name}!!`);
+
+    resetGame();
 }
 
 function combat(d) {
