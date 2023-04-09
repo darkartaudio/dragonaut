@@ -14,19 +14,22 @@ const ctx = game.getContext('2d');
 
 
 // Initialize arrays for dragons and items
-const dragons = [];
-const items = [];
+let dragons = [];
+let items = [];
 
 // Initializes player character and variable to contain movmentEngine loop
 let character;
 let runGame;
+
+// Initializes variable for attack timeout, so that it can be cancelled when dragon dies
+let attackTimeout;
 
 // Initialize active dragon holder for combat
 let activeDragon;
 
 // Initialize array for game events
 // Important game events will be added to this array and displayed
-const gameEvents = [];
+let gameEvents = [];
 
 // =================================================================================
 // MAP LEGEND
@@ -149,23 +152,22 @@ attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButto
 // =================================================================================
 // EVENT LISTENERS
 // =================================================================================
-function removeMovementHandler() {
-    document.removeEventListener('keydown', movementHandler);
-}
 
-setupForm.addEventListener('submit', (e) => {
+function gameSetup(e) {
     e.preventDefault();
     
     // create new character with name and class as chosen by user,
-    // then remove setup form and display game status instead
+    // then reset and remove setup form, display game status instead
     charName = setupForm.elements['character-name'].value;
     charClass = setupForm.elements['character-class'].value;
+    setupForm.reset();
     character = new Character(charName, charClass);
     setupContainer.remove();
     choices.style.justifyContent = 'left';
     choices.append(gameStatus, attackButtons);
-
-    // add game directions to story
+    
+    // clears and then adds game directions to story
+    gameEvents = [];
     gameEvents.unshift('Gather items and slay dragons!');
     gameEvents.unshift('a - left | d - right | w - up | s - down');
     
@@ -173,9 +175,36 @@ setupForm.addEventListener('submit', (e) => {
     addItems();
     
     runGame = setInterval(movementEngine, 60);
-
+    
     removeMovementHandler();
     document.addEventListener('keydown', movementHandler);
+}
+    
+setupForm.addEventListener('submit', gameSetup);
+    
+function removeMovementHandler() {
+    document.removeEventListener('keydown', movementHandler);
+}
+
+// event listeners for attack buttons
+normalButton.addEventListener('click', (e) => {
+    character.attack('normal');
+});
+
+shockButton.addEventListener('click', (e) => {
+    character.attack('shock');
+});
+
+fireButton.addEventListener('click', (e) => {
+    character.attack('fire');
+});
+
+iceButton.addEventListener('click', (e) => {
+    character.attack('ice');
+});
+
+acidButton.addEventListener('click', (e) => {
+    character.attack('acid');
 });
 
 // =================================================================================
@@ -217,6 +246,7 @@ class Character {
         }
     }
 
+    // displays character name/class/health to the game status area
     updateGameStatus() {
         statusName.textContent = this.name;
         statusClass.textContent = this.class;
@@ -224,18 +254,67 @@ class Character {
 
     }
     
+    // disables attack buttons when not in combat
     disableAttacks() {
-        this.attackTypes.forEach((i) => {
-            let btn = document.querySelector(`#${i}-attack`);
-            btn.disabled = true;
+        [...document.querySelector('#attack-buttons').children].forEach((i) => { // iterates through children of attack-buttons container div, which are buttons
+            i.disabled = true; // disables each button
         });
+
+        // TODO: remove event listeners for attack buttons
     }
     
+    // enables attack buttons and adds corresponding event listeners when in combat
     enableAttacks() {
         this.attackTypes.forEach((i) => {
             let btn = document.querySelector(`#${i}-attack`);
             btn.disabled = false;
         });
+
+        // TODO: add event listeners for attack buttons
+    }
+
+    attack(attackType) {
+        // disable attacks for 3 seconds
+        this.disableAttacks();
+        attackTimeout = setTimeout(() => { character.enableAttacks() }, 3000);
+
+        // calculate attack success/damage/message
+        let attackSize = 0;
+        let attackMsg = `${this.name} `;
+
+        let attackRoll = Math.floor(Math.random() * 100);
+        if (attackRoll > 25) { // hit
+            if (attackRoll > 95) { // critical hit, 5 damage
+                attackMsg += 'massacres';
+                attackSize = 5;
+            } else { // normal hit, 3 damage
+                attackMsg += 'hits';
+                attackSize = 3;
+            }
+        } else { // miss, no damage
+            attackMsg += 'misses';
+        }
+
+        
+        attackMsg += ` the ${activeDragon.name} with ${attackType} `;
+        
+        switch (this.class) {
+            case 'warrior':
+                attackMsg += 'slash!';
+                break;
+            case 'wizard':
+                attackMsg += 'spell!';
+                break;
+            case 'ranger':
+                attackMsg += 'arrow!';
+                break;
+        }
+
+        gameEvents.unshift(attackMsg);
+        updateStory();
+        if (attackSize > 0) { // if the attack is a hit
+            activeDragon.receiveAttack(attackSize, attackType);
+        }
     }
     
     receiveAttack(attackSize, attackType) {
@@ -245,8 +324,23 @@ class Character {
                 gameEvents.unshift(`${character.name} resists some of the damage.`);
             }
         });
+
         this.health -= attackSize;
+
+        if (this.health <= 0) {
+            this.health = 0;
+            this.die();
+        }
+
         this.updateGameStatus();
+    }
+
+    die() {
+        gameEvents = [];
+        gameEvents.unshift(`${this.name} was slain!`);
+        gameEvents.unshift('Dragons continue to ravage the countryside until a worthy hero arrives.');
+
+        resetGame();
     }
     
     render() {
@@ -267,14 +361,17 @@ class Character {
 }
 
 class Dragon {
-    constructor(dragonName, dragonImg, dragonX, dragonY) {
+    constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist) {
         this.name = dragonName;
-        this.height = gridSize;
-        this.width = gridSize;
+        this.health = dragonHealth;
+        this.effective = effective;
+        this.resist = resist;
+        this.alive = true;
         this.img = dragonImg;
         this.x = dragonX;
         this.y = dragonY;
-        this.alive = true;
+        this.height = gridSize;
+        this.width = gridSize;
     }
 
     render() {
@@ -303,7 +400,7 @@ class Dragon {
             attackMsg += 'misses';
         }
 
-        attackMsg += ` ${character.name} with its `;
+        attackMsg += ` ${character.name} with `;
 
         switch (this.name) {
             case 'yellow dragon':
@@ -327,9 +424,37 @@ class Dragon {
         }
     }
 
-    // TODO: attack functionality
-    // TODO: receive attack functionality
+    receiveAttack(attackSize, attackType) {
+        if (attackType === this.effective) {
+            attackSize = Math.floor(attackSize * 2);
+            gameEvents.unshift(`The ${this.name} howls in agony!`);
+        }
+
+        if (attackType === this.resist) {
+            attackSize = Math.floor(attackSize * 0.5);
+            gameEvents.unshift(`The ${this.name} resists some of the damage.`);
+        }
+
+        this.health -= attackSize;
+
+        if (this.health <= 0) {
+            this.health = 0;
+            this.die();
+        }
+
+        updateStory();
+    }
+
+    die() {
+        this.alive = false;
+        gameEvents.unshift(`${character.name} has slain the ${this.name}!`);
+
+        // exit combat and restart movement engine
+        resumeMovement();
+    }
+
     // TODO: evade/resist attack functionality
+    // TODO: die
 }
 
 class Item {
@@ -364,11 +489,11 @@ class Item {
                 break;
             case 'white book':
                 character.attackTypes.push('ice');
-                gameEvents.unshift(`${character.name} learns a ice attack!`);
+                gameEvents.unshift(`${character.name} learns an ice attack!`);
                 break;
             case 'green book':
                 character.attackTypes.push('acid');
-                gameEvents.unshift(`${character.name} learns a acid attack!`);
+                gameEvents.unshift(`${character.name} learns an acid attack!`);
                 break;
         }
         this.alive = false;
@@ -429,17 +554,24 @@ function movementHandler(e) {
 // GAME PROCESSES
 // =================================================================================
 function addDragons() {
-    dragons.push(new Dragon('yellow dragon', yellowDragon, 1, 12));
-    dragons.push(new Dragon('red dragon', redDragon, 1, 8));
-    dragons.push(new Dragon('white dragon', whiteDragon, 1, 4));
-    dragons.push(new Dragon('five-headed hydra', hydraFive, 1, 0));
+    dragons = [];
+    // constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist)
+    dragons.push(new Dragon('yellow dragon', yellowDragon, 20, 1, 12, 'acid', 'shock'));
+    dragons.push(new Dragon('red dragon', redDragon, 30, 1, 8, 'ice', 'fire'));
+    dragons.push(new Dragon('white dragon', whiteDragon, 40, 1, 4, 'fire', 'ice'));
+    dragons.push(new Dragon('five-headed hydra', hydraFive, 20, 1, 0, '', ''));
 }
 
 function addItems() {
-    items.push(new Item('yellow book', yellowBook, 1, 14));
-    items.push(new Item('red book', redBook, 1, 10));
-    items.push(new Item('white book', whiteBook, 1, 6));
-    items.push(new Item('green book', greenBook, 1, 2));
+    items = [];
+    items.push(new Item('yellow book', yellowBook, 1, 2));
+    items.push(new Item('red book', redBook, 1, 6));
+    items.push(new Item('white book', whiteBook, 1, 10));
+    items.push(new Item('green book', greenBook, 1, 14));
+    // items.push(new Item('yellow book', yellowBook, 1, 14));
+    // items.push(new Item('red book', redBook, 1, 10));
+    // items.push(new Item('white book', whiteBook, 1, 6));
+    // items.push(new Item('green book', greenBook, 1, 2));
 }
 
 function renderMap() {
@@ -469,14 +601,15 @@ function renderItems() {
     })
 }
 
-function updateStory() {
+function clearStory() {
     // clear all events from story div
     let displayedEvents = [...storyContainer.querySelectorAll('p')];
     while (displayedEvents.length > 0) {
         displayedEvents[0].parentNode.removeChild(displayedEvents[0]);
         displayedEvents.shift();
     }
-
+}
+function displayStory() {
     // display five latest events to story div
     // starting at least recent so that most recent displays last
     for (let i = 4; i >= 0; i--) {
@@ -488,10 +621,18 @@ function updateStory() {
     }
 }
 
-function movementEngine() {
-    // Clear the canvas
+function updateStory() {
+    clearStory();
+    displayStory();
+}
+
+function clearCanvas() {
     ctx.clearRect(0, 0, game.width, game.height);
-    
+}
+
+function movementEngine() {
+    clearCanvas();
+
     renderMap();
     renderDragons();
     renderItems();
@@ -501,21 +642,39 @@ function movementEngine() {
 }
 
 function combatEngine() {
-    character.enableAttacks();
-    activeDragon.attack();
+    if (activeDragon.alive) {
+        activeDragon.attack();
+    } else { // dragon is dead
+    }
+    
     updateStory();
+}
+function resumeMovement() {
+    clearTimeout(attackTimeout); // stop player's attack buttons from becoming activated
+
+    clearInterval(runGame); // stop combat engine
+
+    // start movement engine
+    document.addEventListener('keydown', movementHandler);
+    runGame = setInterval(movementEngine, 60);
 }
 
 function combat(d) {
     removeMovementHandler();
     clearInterval(runGame);
     activeDragon = d;
-    updateStory();
     character.enableAttacks();
     runGame = setInterval(combatEngine, 5000);
-    // d.alive = false;
-    // document.addEventListener('keydown', movementHandler);
-    // runGame = setInterval(movementEngine, 60);
+    updateStory();
+}
+
+function resetGame() {
+    clearInterval(runGame);
+    clearCanvas();
+
+    choices.innerHTML = '';
+    choices.append(setupContainer);
+    choices.style.justifyContent = 'center';
 }
 
 // =================================================================================
