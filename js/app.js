@@ -259,6 +259,10 @@ class Character {
         this.x = 4;
         this.y = 12;
 
+        // previous map position, for handling dragon collisions
+        this.prevx = this.x;
+        this.prevy = this.y;
+
         // set character icon image to match choice of class
         this.img = document.createElement('img');
         switch (charClass) {
@@ -335,7 +339,6 @@ class Character {
         }
 
         gameEvents.unshift({ text: attackMsg, class: attackType });
-        console.log(attackType);
         updateStory();
         if (attackSize > 0) { // if the attack is a hit
             activeDragon.receiveAttack(attackSize, attackType);
@@ -436,9 +439,6 @@ class Dragon {
             case 'white dragon':
                 attackType = 'ice';
                 break;
-            case 'five-headed hyrda':
-                attackType = 'acid';
-                break;
         }
             
         attackMsg += ` ${attackType} breath!`;
@@ -479,6 +479,115 @@ class Dragon {
 
         // exit combat
         endCombat();
+    }
+}
+
+class Hydra extends Dragon {
+    constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist) {
+        super (dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist);
+
+        this.phase = 5;
+        this.headDown = `One of the hydra's heads falls dead to the ground!`;
+    }
+
+    attack() {
+        // calculate attack success/damage/message
+        let attackSize = 0;
+        let attackType = '';
+        let attackMsg = `The ${this.name} `;
+
+        let attackRoll = Math.floor(Math.random() * 100);
+        if (attackRoll > 25) { // hit
+            if (attackRoll > 95) { // critical hit, 5 damage
+                attackMsg += 'massacres';
+                attackSize = 5;
+            } else { // normal hit, 3 damage
+                attackMsg += 'hits';
+                attackSize = 3;
+            }
+        } else { // miss, no damage
+            attackMsg += 'misses';
+        }
+
+        attackMsg += ` ${character.name} with `;
+
+        switch (this.phase) {
+            case 5:
+                attackType = 'chromatic';
+                break;
+            case 4:
+                attackType = 'acid';
+                break;
+            case 3:
+                attackType = 'shock';
+                break;
+            case 2:
+                attackType = 'ice';
+                break;
+            case 1:
+                attackType = 'fire';
+                break;
+        }
+            
+        attackMsg += ` ${attackType} breath!`;
+        gameEvents.unshift({ text: attackMsg, class: attackType });
+        if (attackSize > 0) { // if the attack is a hit
+            character.receiveAttack(attackSize, attackType);
+        }
+    }
+
+    die() {
+        switch (this.phase) {
+            case 5:
+                gameEvents.unshift({ text: this.headDown, class: 'emphasis' });
+                this.effective = 'shock';
+                this.resist = 'acid';
+                this.img = hydraFour;
+                this.health = 20;
+                break;
+            case 4:
+                gameEvents.unshift({ text: this.headDown, class: 'emphasis' });
+                this.effective = 'acid';
+                this.resist = 'shock';
+                this.img = hydraThree;
+                this.health = 20;
+                break;
+            case 3:
+                gameEvents.unshift({ text: this.headDown, class: 'emphasis' });
+                this.effective = 'fire';
+                this.resist = 'ice';
+                this.img = hydraTwo;
+                this.health = 20;
+                break;
+            case 2:
+                gameEvents.unshift({ text: this.headDown, class: 'emphasis' });
+                this.effective = 'ice';
+                this.resist = 'fire';
+                this.img = hydraOne;
+                this.health = 20;
+                break;
+            case 1:
+                super.die();
+                return true;
+                break;
+        }
+        this.render();
+        this.phase--;
+    }
+
+    render() {
+        // since the movement engine isn't running during combat, we need to take care of a few things
+        let xOffset = character.x - this.x;
+        let yOffset = character.y - this.y;
+
+        // clear the square occupied by the hydra to get rid of the previous-phase image
+        ctx.clearRect((viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
+
+        // the above also clears the floor tile, so we re-draw that
+        ctx.drawImage(floorTile, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
+
+        // and then render the dragon as normal
+        super.render();
     }
 }
 
@@ -602,7 +711,12 @@ function movementHandler(e) {
         || map[targetY][targetX] === '0' // barrier
     ) {
         return false; // don't move character
-    } else { // move character
+    } else {
+        // store previous location
+        character.prevx = character.x;
+        character.prevy = character.y;
+
+        // move character
         character.x = targetX;
         character.y = targetY;
     }
@@ -619,7 +733,7 @@ function addDragons() {
     dragons.push(new Dragon('yellow dragon', yellowDragon, 20, 1, 9, 'acid', 'shock'));
     dragons.push(new Dragon('red dragon', redDragon, 30, 7, 2, 'ice', 'fire'));
     dragons.push(new Dragon('white dragon', whiteDragon, 40, 1, 2, 'fire', 'ice'));
-    dragons.push(new Dragon('five-headed hydra', hydraFive, 20, 4, 5, '', ''));
+    dragons.push(new Hydra('five-headed hydra', hydraFive, 20, 4, 5, '', ''));
 }
 
 function addItems() {
@@ -753,11 +867,24 @@ function combatEngine() {
 }
 
 function combat(d) {
+    // stop the movement
     removeMovementHandler();
     clearInterval(runGame);
+
+    // move character back to previously-occupied square, so it doesn't display on top of dragon
+    character.x = character.prevx;
+    character.y = character.prevy;
+    
+    // redraw map one more time to update character position
+    movementEngine();
+
+    // store the active dragon for use during combat
     activeDragon = d;
+
+    // enable attack buttons and start combat
     character.enableAttacks();
     runGame = setInterval(combatEngine, 5000);
+
     updateStory();
 }
 

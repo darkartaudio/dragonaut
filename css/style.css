@@ -93,6 +93,7 @@ main {
     margin: 0;
 }
 
+/* Classes for color-coded game events */
 .storymsg {
     color: black;
 }
