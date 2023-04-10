@@ -8,23 +8,6 @@ const gridSize = 32;
 // need to adjust canvas size in style.css if this number gets big
 const viewRange = 3; 
 
-const game = document.querySelector('#game');
-const story = document.querySelector('#story');
-const storyContainer = document.querySelector('#story-container');
-const choices = document.querySelector('#choices');
-const setupContainer = document.querySelector('#setup-container');
-const setupForm = document.querySelector('#setup-form');
-
-// =================================================================================
-// SETUP FOR CANVAS RENDERING
-// 2D rendering context for canvas element
-// This is used for drawing shapes, text, images, etc.
-// =================================================================================
-game.setAttribute('height', getComputedStyle(game)['height']);
-game.setAttribute('width', getComputedStyle(game)['width']);
-const ctx = game.getContext('2d');
-
-
 // Initialize arrays for dragons and items
 let dragons = [];
 let items = [];
@@ -47,6 +30,22 @@ let activeDragon;
 // }
 let gameEvents = [];
 
+const game = document.querySelector('#game');
+const story = document.querySelector('#story');
+const storyContainer = document.querySelector('#story-container');
+const choices = document.querySelector('#choices');
+const setupContainer = document.querySelector('#setup-container');
+const setupForm = document.querySelector('#setup-form');
+
+// =================================================================================
+// SETUP FOR CANVAS RENDERING
+// 2D rendering context for canvas element
+// This is used for drawing shapes, text, images, etc.
+// =================================================================================
+game.setAttribute('height', getComputedStyle(game)['height']);
+game.setAttribute('width', getComputedStyle(game)['width']);
+const ctx = game.getContext('2d');
+
 // =================================================================================
 // MAP LEGEND
 // G = green dragon, W = white dragon, R = red dragon, Y = yellow dragon
@@ -58,26 +57,6 @@ let gameEvents = [];
 // 0 values are used by renderMap function to create functional barriers
 // other values are for easily visually laying out the map and have no functional effect
 // =================================================================================
-// let map = [
-//     //    0    1    2
-//     ['0', 'G', '0'], // 00
-//     ['-', '-', '-'], // 01
-//     ['-', 'g', '-'], // 02
-//     ['-', '-', '-'], // 03
-//     ['0', 'W', '0'], // 04
-//     ['-', '-', '-'], // 05
-//     ['-', 'w', '-'], // 06
-//     ['-', '-', '-'], // 07
-//     ['0', 'R', '0'], // 08
-//     ['-', '-', '-'], // 09
-//     ['-', 'r', '-'], // 10
-//     ['-', '-', '-'], // 11
-//     ['0', 'Y', '0'], // 12
-//     ['-', '-', '-'], // 13
-//     ['-', 'y', '-'], // 14
-//     ['-', '-', '-'], // 15
-//     ['0', 'C', '0']  // 16
-// ];
 
 let map = [
 //    0    1    2    3    4    5    6    7    8
@@ -210,8 +189,8 @@ function gameSetup(e) {
     
     // clears and then adds game directions to story
     gameEvents = [];
-    gameEvents.unshift('Gather items and slay dragons!');
-    gameEvents.unshift('a - left | d - right | w - up | s - down');
+    gameEvents.unshift({ text: 'Gather items and slay dragons!', class: 'storymsg'});
+    gameEvents.unshift({ text: 'a - left | d - right | w - up | s - down', class: 'storymsg'});
     
     addDragons();
     addItems();
@@ -253,7 +232,7 @@ acidButton.addEventListener('click', (e) => {
 
 
 // =================================================================================
-// ENTITIES
+// CHARACTER, DRAGON, AND ITEM CLASSES
 // =================================================================================
 class Character {
     constructor(charName, charClass) {
@@ -343,7 +322,7 @@ class Character {
                 break;
         }
 
-        gameEvents.unshift(attackMsg);
+        gameEvents.unshift({ text: attackMsg, class: 'heroattack' });
         updateStory();
         if (attackSize > 0) { // if the attack is a hit
             activeDragon.receiveAttack(attackSize, attackType);
@@ -354,7 +333,7 @@ class Character {
         this.attackTypes.forEach((a) => {
             if (a === attackType) {
                 attackSize = Math.floor(attackSize * 0.5);
-                gameEvents.unshift(`${character.name} resists some of the damage.`);
+                gameEvents.unshift({ text: `${character.name} resists some of the damage.`, class: 'emphasis' });
             }
         });
 
@@ -370,8 +349,8 @@ class Character {
 
     die() {
         gameEvents = [];
-        gameEvents.unshift(`${this.name} was slain!`);
-        gameEvents.unshift('Dragons continue to ravage the countryside until a worthy hero arrives.');
+        gameEvents.unshift({ text: `${this.name} was slain!`, class: 'heroattack' });
+        gameEvents.unshift({ text: 'Dragons continue to ravage the countryside until a worthy hero arrives.', class: 'heroattack' });
 
         resetGame();
     }
@@ -450,7 +429,7 @@ class Dragon {
         }
             
         attackMsg += ` ${attackType} breath!`;
-        gameEvents.unshift(attackMsg);
+        gameEvents.unshift({ text: attackMsg, class: 'enemyattack' });
         if (attackSize > 0) { // if the attack is a hit
             character.receiveAttack(attackSize, attackType);
         }
@@ -459,12 +438,12 @@ class Dragon {
     receiveAttack(attackSize, attackType) {
         if (attackType === this.effective) {
             attackSize = Math.floor(attackSize * 2);
-            gameEvents.unshift(`The ${this.name} howls in agony!`);
+            gameEvents.unshift({ text: `The ${this.name} howls in agony!`, class: 'emphasis' });
         }
 
         if (attackType === this.resist) {
             attackSize = Math.floor(attackSize * 0.5);
-            gameEvents.unshift(`The ${this.name} resists some of the damage.`);
+            gameEvents.unshift({ text: `The ${this.name} resists some of the damage.`, class: 'emphasis' });
         }
 
         this.health -= attackSize;
@@ -479,7 +458,7 @@ class Dragon {
 
     die() {
         this.alive = false;
-        gameEvents.unshift(`${character.name} has slain the ${this.name}!`);
+        gameEvents.unshift({ text: `${character.name} has slain the ${this.name}!`, class: 'storymsg' });
 
         // exit combat
         endCombat();
@@ -512,19 +491,19 @@ class Item {
         switch(this.name) {
             case 'yellow book':
                 character.attackTypes.push('shock');
-                gameEvents.unshift(`${character.name} learns a shock attack!`);
+                gameEvents.unshift({ text: `${character.name} learns a shock attack!`, class: 'storymsg' });
                 break;
             case 'red book':
                 character.attackTypes.push('fire');
-                gameEvents.unshift(`${character.name} learns a fire attack!`);
+                gameEvents.unshift({ text: `${character.name} learns a fire attack!`, class: 'storymsg' });
                 break;
             case 'white book':
                 character.attackTypes.push('ice');
-                gameEvents.unshift(`${character.name} learns an ice attack!`);
+                gameEvents.unshift({ text: `${character.name} learns an ice attack!`, class: 'storymsg' });
                 break;
             case 'green book':
                 character.attackTypes.push('acid');
-                gameEvents.unshift(`${character.name} learns an acid attack!`);
+                gameEvents.unshift({ text: `${character.name} learns an acid attack!`, class: 'storymsg' });
                 break;
         }
         this.alive = false;
@@ -579,10 +558,8 @@ function movementHandler(e) {
     checkForCollisions();
 }
 
-// TODO: handle screen scrolling
-
 // =================================================================================
-// GAME PROCESSES
+// CANVAS RENDERING FUNCTIONS
 // =================================================================================
 function addDragons() {
     dragons = [];
@@ -688,43 +665,22 @@ function renderItems() {
     })
 }
 
-function clearStory() {
-    // clear all events from story div
-    let displayedEvents = [...storyContainer.querySelectorAll('p')];
-    while (displayedEvents.length > 0) {
-        displayedEvents[0].parentNode.removeChild(displayedEvents[0]);
-        displayedEvents.shift();
-    }
-}
-function displayStory() {
-    // display five latest events to story div
-    // starting at least recent so that most recent displays last
-    for (let i = 4; i >= 0; i--) {
-        if(i < gameEvents.length) {
-            let newEvent = document.createElement('p');
-            newEvent.textContent = gameEvents[i];
-            storyContainer.append(newEvent);
-        }
-    }
-}
-
-function updateStory() {
-    clearStory();
-    displayStory();
-}
-
 function clearCanvas() {
     ctx.clearRect(0, 0, game.width, game.height);
 }
 
+// =================================================================================
+// COMBAT AND MOVEMENT ENGINE FUNCTIONS
+// =================================================================================
+
 function movementEngine() {
     clearCanvas();
-
+    
     renderMap();
     renderDragons();
     renderItems();
     character.render();
-
+    
     updateStory();
 }
 
@@ -736,11 +692,21 @@ function combatEngine() {
     
     updateStory();
 }
+
+function combat(d) {
+    removeMovementHandler();
+    clearInterval(runGame);
+    activeDragon = d;
+    character.enableAttacks();
+    runGame = setInterval(combatEngine, 5000);
+    updateStory();
+}
+
 function endCombat() {
     clearTimeout(attackTimeout); // stop player's attack buttons from becoming activated
-
+    
     clearInterval(runGame); // stop combat engine
-
+    
     // if there are any dragons left alive
     if(dragonsAreAlive()) {
         // start movement engine
@@ -761,28 +727,48 @@ function dragonsAreAlive() {
     return false;
 }
 
-function winGame() {
-    gameEvents = [];
-    gameEvents.unshift(`${character.name} hath smote the ravaging horde of dragons!`);
-    gameEvents.unshift('The country folk may now enjoy a life of peace and prosperity!');
-    gameEvents.unshift(`Hail ${character.name}!!`);
-
-    resetGame();
+// =================================================================================
+// STORY DISPLAY FUNCTIONS
+// =================================================================================
+function clearStory() {
+    // clear all events from story div
+    let displayedEvents = [...storyContainer.querySelectorAll('p')];
+    while (displayedEvents.length > 0) {
+        displayedEvents[0].parentNode.removeChild(displayedEvents[0]);
+        displayedEvents.shift();
+    }
+}
+function displayStory() {
+    // display five latest events to story div
+    // starting at least recent so that most recent displays last
+    for (let i = 4; i >= 0; i--) {
+        if(i < gameEvents.length) {
+            let newEvent = document.createElement('p');
+                newEvent.textContent = gameEvents[i].text;
+                newEvent.setAttribute('class', gameEvents[i].class);
+            storyContainer.append(newEvent);
+        }
+    }
 }
 
-function combat(d) {
-    removeMovementHandler();
-    clearInterval(runGame);
-    activeDragon = d;
-    character.enableAttacks();
-    runGame = setInterval(combatEngine, 5000);
-    updateStory();
+function updateStory() {
+    clearStory();
+    displayStory();
+}
+
+function winGame() {
+    gameEvents = [];
+    gameEvents.unshift({ text: `${character.name} hath smote the ravaging horde of dragons!`, class: 'storymsg' });
+    gameEvents.unshift({ text: 'The country folk may now enjoy a life of peace and prosperity!', class: 'storymsg' });
+    gameEvents.unshift({ text: `Hail ${character.name}!!`, class: 'storymsg' });
+    
+    resetGame();
 }
 
 function resetGame() {
     clearInterval(runGame);
     clearCanvas();
-
+    
     choices.innerHTML = '';
     choices.append(setupContainer);
     choices.style.justifyContent = 'center';
@@ -794,7 +780,7 @@ function resetGame() {
 function checkForCollisions() {
     dragons.forEach((d) => {
         if(d.alive && d.x === character.x && d.y === character.y) {
-            gameEvents.unshift(`${character.name} engages a ${d.name} in glorious combat!`);
+            gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'storymsg' });
             combat(d);
         }
     });

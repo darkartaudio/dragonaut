@@ -51,6 +51,26 @@ main {
 
 #choices {
     grid-area: choices;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#choices .attack-button {
+    margin: 0.25em 0.5em;
+}
+
+#game-status {
+    margin: 1em;
+}
+
+#status-name {
+    font-weight: bold;
+}
+
+#status-class {
+    font-style: italic;
 }
 
 #setup-form,
@@ -67,29 +87,28 @@ main {
     margin-right: 1em;
 }
 
-#choices {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
 
 #story-container h2,
 #story-container p {
     margin: 0;
 }
 
-#status-name {
-    font-weight: bold;
+.storymsg {
+    color: black;
 }
 
-#status-class {
-    font-style: italic;
+.emphasis {
+    color: purple;
 }
 
-#game-status {
-    margin: 1em;
+.enemyattack {
+    color: red;
 }
 
-#choices .attack-button {
-    margin: 0.25em 0.5em;
+.heroattack {
+    color: blue;
+}
+
+.item {
+    color: green;
 }
