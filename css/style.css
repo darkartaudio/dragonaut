@@ -13,8 +13,8 @@ body {
 }
 
 canvas {
-    height: 544px;
-    width: 96px;
+    height: 224px;
+    width: 224px;
 }
 
 #game-container {

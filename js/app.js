@@ -2,6 +2,7 @@
 // GLOBAL DOM / VARIABLES
 // =================================================================================
 const gridSize = 32; // number of pixels in each map square, also corresponds to size of character/monster/item sprites (32 x 32)
+const viewRange = 3; // number of map squares in each direction that the character can see
 
 const game = document.querySelector('#game');
 const story = document.querySelector('#story');
@@ -10,6 +11,13 @@ const choices = document.querySelector('#choices');
 const setupContainer = document.querySelector('#setup-container');
 const setupForm = document.querySelector('#setup-form');
 
+// =================================================================================
+// SETUP FOR CANVAS RENDERING
+// 2D rendering context for canvas element
+// This is used for drawing shapes, text, images, etc.
+// =================================================================================
+game.setAttribute('height', getComputedStyle(game)['height']);
+game.setAttribute('width', getComputedStyle(game)['width']);
 const ctx = game.getContext('2d');
 
 
@@ -42,25 +50,42 @@ let gameEvents = [];
 // 0 values are used by renderMap function to create functional barriers
 // other values are for easily visually laying out the map and have no functional effect
 // =================================================================================
+// let map = [
+//     //    0    1    2
+//     ['0', 'G', '0'], // 00
+//     ['-', '-', '-'], // 01
+//     ['-', 'g', '-'], // 02
+//     ['-', '-', '-'], // 03
+//     ['0', 'W', '0'], // 04
+//     ['-', '-', '-'], // 05
+//     ['-', 'w', '-'], // 06
+//     ['-', '-', '-'], // 07
+//     ['0', 'R', '0'], // 08
+//     ['-', '-', '-'], // 09
+//     ['-', 'r', '-'], // 10
+//     ['-', '-', '-'], // 11
+//     ['0', 'Y', '0'], // 12
+//     ['-', '-', '-'], // 13
+//     ['-', 'y', '-'], // 14
+//     ['-', '-', '-'], // 15
+//     ['0', 'C', '0']  // 16
+// ];
+
 let map = [
-    //    0    1    2
-    ['0', 'G', '0'], // 00
-    ['-', '-', '-'], // 01
-    ['-', 'g', '-'], // 02
-    ['-', '-', '-'], // 03
-    ['0', 'W', '0'], // 04
-    ['-', '-', '-'], // 05
-    ['-', 'w', '-'], // 06
-    ['-', '-', '-'], // 07
-    ['0', 'R', '0'], // 08
-    ['-', '-', '-'], // 09
-    ['-', 'r', '-'], // 10
-    ['-', '-', '-'], // 11
-    ['0', 'Y', '0'], // 12
-    ['-', '-', '-'], // 13
-    ['-', 'y', '-'], // 14
-    ['-', '-', '-'], // 15
-    ['0', 'C', '0']  // 16
+//    0    1    2    3    4    5    6    7    8
+    ['0', '0', '0', '0', '0', '0', '0', '0', '0'], // 00
+    ['0', 'w', '0', '-', '-', '-', '0', 'g', '0'], // 01
+    ['0', 'W', '0', '-', '-', '-', '0', 'R', '0'], // 02
+    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 03
+    ['0', '-', '-', '0', '0', '0', '-', '-', '0'], // 04
+    ['0', '-', '-', '0', 'G', '0', '-', '-', '0'], // 05
+    ['0', '-', '-', '0', '-', '0', '-', '-', '0'], // 06
+    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 07
+    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 08
+    ['0', 'Y', '0', '-', '-', '-', '0', '-', '0'], // 09
+    ['0', 'r', '0', '-', '-', '-', '0', 'y', '0'], // 10
+    ['0', '0', '0', '0', '-', '0', '0', '0', '0'],  // 11
+    ['0', '0', '0', '0', 'C', '0', '0', '0', '0']  // 12
 ];
 
 // =================================================================================
@@ -71,6 +96,9 @@ wallTile.src = './img/stone-wall.png';
 
 const floorTile = document.createElement('img');
 floorTile.src = './img/stone-floor.png';
+
+const darkTile = document.createElement('img');
+darkTile.src = './img/dark-tile.png';
 
 const yellowBook = document.createElement('img');
 yellowBook.src = './img/book-yellow.png';
@@ -110,49 +138,55 @@ hydraOne.src = './img/hydra1.png';
 
 // Set up game status div, which will be displayed when game starts
 const gameStatus = document.createElement('div');
-gameStatus.setAttribute('id', 'game-status');
-const statusName = document.createElement('div');
-statusName.setAttribute('id', 'status-name');
-const statusClass = document.createElement('div');
-statusClass.setAttribute('id', 'status-class');
-const statusHealth = document.createElement('div');
-statusHealth.setAttribute('id', 'status-health');
+    gameStatus.setAttribute('id', 'game-status');
+
+    const statusName = document.createElement('div');
+        statusName.setAttribute('id', 'status-name');
+    const statusClass = document.createElement('div');
+        statusClass.setAttribute('id', 'status-class');
+    const statusHealth = document.createElement('div');
+        statusHealth.setAttribute('id', 'status-health');
+
 gameStatus.append(statusName, statusClass, statusHealth);
 
 // Set up attackButtons div, which will be updated when character finds a new item
 const attackButtons = document.createElement('div');
-attackButtons.setAttribute('id', 'attack-buttons');
-const normalButton = document.createElement('button');
-normalButton.setAttribute('id', 'normal-attack');
-normalButton.setAttribute('class', 'attack-button');
-normalButton.textContent = 'normal attack';
-normalButton.disabled = true;
-const shockButton = document.createElement('button');
-shockButton.setAttribute('id', 'shock-attack');
-shockButton.setAttribute('class', 'attack-button');
-shockButton.textContent = 'shock attack';
-shockButton.disabled = true;
-const fireButton = document.createElement('button');
-fireButton.setAttribute('id', 'fire-attack');
-fireButton.setAttribute('class', 'attack-button');
-fireButton.textContent = 'fire attack';
-fireButton.disabled = true;
-const iceButton = document.createElement('button');
-iceButton.setAttribute('id', 'ice-attack');
-iceButton.setAttribute('class', 'attack-button');
-iceButton.textContent = 'ice attack';
-iceButton.disabled = true;
-const acidButton = document.createElement('button');
-acidButton.setAttribute('id', 'acid-attack');
-acidButton.setAttribute('class', 'attack-button');
-acidButton.textContent = 'acid attack';
-acidButton.disabled = true;
+    attackButtons.setAttribute('id', 'attack-buttons');
+
+    const normalButton = document.createElement('button');
+        normalButton.setAttribute('id', 'normal-attack');
+        normalButton.setAttribute('class', 'attack-button');
+        normalButton.textContent = 'normal attack';
+        normalButton.disabled = true;
+    const shockButton = document.createElement('button');
+        shockButton.setAttribute('id', 'shock-attack');
+        shockButton.setAttribute('class', 'attack-button');
+        shockButton.textContent = 'shock attack';
+        shockButton.disabled = true;
+    const fireButton = document.createElement('button');
+        fireButton.setAttribute('id', 'fire-attack');
+        fireButton.setAttribute('class', 'attack-button');
+        fireButton.textContent = 'fire attack';
+        fireButton.disabled = true;
+    const iceButton = document.createElement('button');
+        iceButton.setAttribute('id', 'ice-attack');
+        iceButton.setAttribute('class', 'attack-button');
+        iceButton.textContent = 'ice attack';
+        iceButton.disabled = true;
+    const acidButton = document.createElement('button');
+        acidButton.setAttribute('id', 'acid-attack');
+        acidButton.setAttribute('class', 'attack-button');
+        acidButton.textContent = 'acid attack';
+        acidButton.disabled = true;
+
 attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButton);
 
 // =================================================================================
 // EVENT LISTENERS
 // =================================================================================
 
+// function to set up and start game
+// launched when player fills out character details and chooses Start Game
 function gameSetup(e) {
     e.preventDefault();
     
@@ -179,9 +213,11 @@ function gameSetup(e) {
     removeMovementHandler();
     document.addEventListener('keydown', movementHandler);
 }
-    
+
+// event listener for starting the game
 setupForm.addEventListener('submit', gameSetup);
     
+// stops the movement engine event listener
 function removeMovementHandler() {
     document.removeEventListener('keydown', movementHandler);
 }
@@ -207,13 +243,6 @@ acidButton.addEventListener('click', (e) => {
     character.attack('acid');
 });
 
-// =================================================================================
-// SETUP FOR CANVAS RENDERING
-// 2D rendering context for canvas element
-// This is used for drawing shapes, text, images, etc.
-// =================================================================================
-game.setAttribute('height', getComputedStyle(game)['height']);
-game.setAttribute('width', getComputedStyle(game)['width']);
 
 // =================================================================================
 // ENTITIES
@@ -228,8 +257,8 @@ class Character {
         this.width = gridSize;
 
         // starting map position
-        this.x = 1;
-        this.y = 16;
+        this.x = 4;
+        this.y = 12;
 
         // set character icon image to match choice of class
         this.img = document.createElement('img');
@@ -254,23 +283,19 @@ class Character {
 
     }
     
-    // disables attack buttons when not in combat
+    // disables attack buttons when not in combat or waiting for attack to recharge
     disableAttacks() {
-        [...document.querySelector('#attack-buttons').children].forEach((i) => { // iterates through children of attack-buttons container div, which are buttons
+        [...document.querySelector('#attack-buttons').children].forEach((i) => { // iterates through attack buttons
             i.disabled = true; // disables each button
         });
-
-        // TODO: remove event listeners for attack buttons
     }
     
-    // enables attack buttons and adds corresponding event listeners when in combat
+    // enables attack buttons when attacks are available
     enableAttacks() {
         this.attackTypes.forEach((i) => {
             let btn = document.querySelector(`#${i}-attack`);
             btn.disabled = false;
         });
-
-        // TODO: add event listeners for attack buttons
     }
 
     attack(attackType) {
@@ -344,8 +369,9 @@ class Character {
     }
     
     render() {
+        // since view is centered on character, canvas location of character will always be 3x3
         // draw character on canvas
-        ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        ctx.drawImage(this.img, 3 * gridSize, 3 * gridSize, this.width, this.height);
     
         // update game status
         this.updateGameStatus();
@@ -354,8 +380,6 @@ class Character {
         // if the game is calling render, we're in movement mode and not combat mode
         this.disableAttacks();
     }
-
-    // TODO: evade/resist attack functionality?
 }
 
 class Dragon {
@@ -374,8 +398,10 @@ class Dragon {
 
     render() {
         // if dragon is alive, draw dragon on canvas
-        if (this.alive) {
-            ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        if (isVisible(this) && this.alive) {
+            let xOffset = character.x - this.x;
+            let yOffset = character.y - this.y;
+            ctx.drawImage(this.img, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
         }
     }
 
@@ -410,7 +436,7 @@ class Dragon {
             case 'white dragon':
                 attackType = 'ice';
                 break;
-            case 'green dragon':
+            case 'five-headed hyrda':
                 attackType = 'acid';
                 break;
         }
@@ -450,8 +476,6 @@ class Dragon {
         // exit combat
         endCombat();
     }
-
-    // TODO: evade/resist attack functionality?
 }
 
 class Item {
@@ -553,34 +577,90 @@ function movementHandler(e) {
 function addDragons() {
     dragons = [];
     // constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist)
-    dragons.push(new Dragon('yellow dragon', yellowDragon, 20, 1, 12, 'acid', 'shock'));
-    dragons.push(new Dragon('red dragon', redDragon, 30, 1, 8, 'ice', 'fire'));
-    dragons.push(new Dragon('white dragon', whiteDragon, 40, 1, 4, 'fire', 'ice'));
-    dragons.push(new Dragon('five-headed hydra', hydraFive, 20, 1, 0, '', ''));
+    dragons.push(new Dragon('yellow dragon', yellowDragon, 20, 1, 9, 'acid', 'shock'));
+    dragons.push(new Dragon('red dragon', redDragon, 30, 7, 2, 'ice', 'fire'));
+    dragons.push(new Dragon('white dragon', whiteDragon, 40, 1, 2, 'fire', 'ice'));
+    dragons.push(new Dragon('five-headed hydra', hydraFive, 20, 4, 5, '', ''));
 }
 
 function addItems() {
     items = [];
-    items.push(new Item('yellow book', yellowBook, 1, 2));
-    items.push(new Item('red book', redBook, 1, 6));
-    items.push(new Item('white book', whiteBook, 1, 10));
-    items.push(new Item('green book', greenBook, 1, 14));
-    // items.push(new Item('yellow book', yellowBook, 1, 14));
-    // items.push(new Item('red book', redBook, 1, 10));
-    // items.push(new Item('white book', whiteBook, 1, 6));
-    // items.push(new Item('green book', greenBook, 1, 2));
+    items.push(new Item('yellow book', yellowBook, 7, 10));
+    items.push(new Item('red book', redBook, 1, 10));
+    items.push(new Item('white book', whiteBook, 1, 1));
+    items.push(new Item('green book', greenBook, 7, 1));
 }
 
-function renderMap() {
-    for (let i = 0; i < map.length; i++) {
-        for (let j = 0; j < map[i].length; j++) {
-            switch (map[i][j]) {
-                case '0': // barrier
-                    ctx.drawImage(wallTile, j * gridSize, i * gridSize, gridSize, gridSize);
-                    break;
-                default: // non-barrier
-                    ctx.drawImage(floorTile, j * gridSize, i * gridSize, gridSize, gridSize);
-                    break;
+function isVisible(obj) {
+    // game map coordinates relative to character
+    let startX = character.x - viewRange;
+    let endX = character.x + viewRange;
+    let startY = character.y - viewRange;
+    let endY = character.y + viewRange;
+
+    // if obj is within view, return true
+    if (
+        obj.x >= startX &&
+        obj.x <= endX &&
+        obj.y >= startY &&
+        obj.y <= endY
+    ) {
+        return true;
+    }
+
+    // otherwise return false
+    return false;
+}
+
+// draw the 7x7 map square around character
+function renderMap() { 
+    // // // // // // //
+    // - - - - - - - //
+    // - - - - - - - //
+    // - - - - - - - //
+    // - - - C - - - //
+    // - - - - - - - //
+    // - - - - - - - //
+    // - - - - - - - //
+    // // // // // // //
+
+    // game map coordinates relative to character
+    let startX = character.x - viewRange;
+    let endX = character.x + viewRange;
+    let startY = character.y - viewRange;
+    let endY = character.y + viewRange;
+
+
+    // we map each map square into a corresponding square on the HTML canvas
+    // char and canvas variables initialized here
+    let charX;
+    let charY
+    let canvasY;
+    let canvasX;
+
+    // iterate through both the character Y axis and canvas Y axis
+    for (charY = startY, canvasY = 0; charY <= endY; charY++, canvasY++) {
+        
+        // iterate through the both the character X axis and canvas X axis
+        for (charX = startX, canvasX = 0; charX <= endX; charX++, canvasX++) {
+
+            // check if coordinates describe a square within the game map
+            if (
+                charX >= 0 // x coordinate is within left side of map
+                && charX < map[0].length // x coordinate is within right side of map
+                && charY >= 0 // y coordinate is within top of map
+                && charY < map.length // y coordinate is within bottom of map
+            ) {
+                switch (map[charY][charX]) {
+                    case '0': // wall, draw wall tile
+                        ctx.drawImage(wallTile, canvasX * gridSize, canvasY * gridSize, gridSize, gridSize);
+                        break;
+                    default: // floor, draw floor tile
+                        ctx.drawImage(floorTile, canvasX * gridSize, canvasY * gridSize, gridSize, gridSize);
+                        break;
+                }
+            } else { // off the map, draw darkness
+                ctx.drawImage(darkTile, canvasX * gridSize, canvasY * gridSize, gridSize, gridSize);
             }
         }
     }
@@ -589,13 +669,13 @@ function renderMap() {
 function renderDragons() {
     dragons.forEach((d) => {
         d.render();
-    })
+    });
 }
 
 function renderItems() {
-    items.forEach((i) => {
-        i.render();
-    })
+    // items.forEach((i) => {
+    //     i.render();
+    // })
 }
 
 function clearStory() {
