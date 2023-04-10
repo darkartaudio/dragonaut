@@ -200,7 +200,7 @@ function gameSetup(e) {
     choices.append(gameStatus, attackButtons);
     
     // clears and then adds game directions to story
-    gameEvents = [];
+    initStory();
     gameEvents.unshift({ text: 'Gather items and slay dragons!', class: 'storymsg'});
     gameEvents.unshift({ text: 'a - left | d - right | w - up | s - down', class: 'storymsg'});
     
@@ -242,6 +242,11 @@ acidButton.addEventListener('click', (e) => {
     character.attack('acid');
 });
 
+window.addEventListener('DOMContentLoaded', () => {
+    initStory();
+    gameEvents.unshift({ text: 'Save the countryside from a pack of ravaging dragons!', class: 'storymsg' });
+    updateStory();
+});
 
 // =================================================================================
 // CHARACTER, DRAGON, AND ITEM CLASSES
@@ -364,9 +369,9 @@ class Character {
     }
 
     die() {
-        gameEvents = [];
-        gameEvents.unshift({ text: `${this.name} was slain!`, class: 'heroattack' });
-        gameEvents.unshift({ text: 'Dragons continue to ravage the countryside until a worthy hero arrives.', class: 'heroattack' });
+        initStory();
+        gameEvents.unshift({ text: `${this.name} was slain!`, class: 'emphasis' });
+        gameEvents.unshift({ text: 'Dragons continue to ravage the countryside until a worthy hero arrives.', class: 'storymsg' });
 
         resetGame();
     }
@@ -475,7 +480,7 @@ class Dragon {
         // create a poof effect that renders on the map
         poofs.push(new Poof(this.x, this.y));
 
-        gameEvents.unshift({ text: `${character.name} has slain the ${this.name}!`, class: 'storymsg' });
+        gameEvents.unshift({ text: `${character.name} has slain the ${this.name}!`, class: 'emphasis' });
 
         // exit combat
         endCombat();
@@ -495,7 +500,7 @@ class Hydra extends Dragon {
         let attackSize = 0;
         let attackType = '';
         let attackMsg = `The ${this.name} `;
-
+        
         let attackRoll = Math.floor(Math.random() * 100);
         if (attackRoll > 25) { // hit
             if (attackRoll > 95) { // critical hit, 5 damage
@@ -530,7 +535,9 @@ class Hydra extends Dragon {
         }
             
         attackMsg += ` ${attackType} breath!`;
+
         gameEvents.unshift({ text: attackMsg, class: attackType });
+        
         if (attackSize > 0) { // if the attack is a hit
             character.receiveAttack(attackSize, attackType);
         }
@@ -576,7 +583,7 @@ class Hydra extends Dragon {
     }
 
     render() {
-        // since the movement engine isn't running during combat, we need to take care of a few things
+        // since the movement engine isn't redrawing the canvas during combat, we need to take care of a few things
         let xOffset = character.x - this.x;
         let yOffset = character.y - this.y;
 
@@ -727,6 +734,17 @@ function movementHandler(e) {
 // =================================================================================
 // CANVAS RENDERING FUNCTIONS
 // =================================================================================
+function initStory() {
+    // creates spacer paragraphs so that story div height stays consistent
+    gameEvents = [
+        { text: '', class: 'invis' },
+        { text: '', class: 'invis' },
+        { text: '', class: 'invis' },
+        { text: '', class: 'invis' },
+        { text: '', class: 'invis' }
+    ];
+}
+
 function addDragons() {
     dragons = [];
     // constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist)
@@ -943,10 +961,10 @@ function updateStory() {
 }
 
 function winGame() {
-    gameEvents = [];
+    initStory();
     gameEvents.unshift({ text: `${character.name} hath smote the ravaging horde of dragons!`, class: 'storymsg' });
     gameEvents.unshift({ text: 'The country folk may now enjoy a life of peace and prosperity!', class: 'storymsg' });
-    gameEvents.unshift({ text: `Hail ${character.name}!!`, class: 'storymsg' });
+    gameEvents.unshift({ text: `Hail ${character.name}!!`, class: 'emphasis' });
     
     resetGame();
 }
@@ -966,7 +984,7 @@ function resetGame() {
 function checkForCollisions() {
     dragons.forEach((d) => {
         if(d.alive && d.x === character.x && d.y === character.y) {
-            gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'storymsg' });
+            gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'emphasis' });
             combat(d);
         }
     });
@@ -977,3 +995,4 @@ function checkForCollisions() {
         }
     });
 }
+

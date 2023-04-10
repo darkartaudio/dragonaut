@@ -99,7 +99,7 @@ main {
 }
 
 .emphasis {
-    color: purple;
+    font-weight: bold;
 }
 
 .normal {
@@ -111,7 +111,7 @@ main {
 }
 
 .ice {
-    color: blue;
+    color: white;
 }
 
 .acid {
@@ -120,4 +120,8 @@ main {
 
 .shock {
     color: yellow;
+}
+
+.invis {
+    height: 1em;
 }
