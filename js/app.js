@@ -11,6 +11,7 @@ const viewRange = 3;
 // Initialize arrays for dragons and items
 let dragons = [];
 let items = [];
+let poofs = [];
 
 // Initializes player character and variable to contain movmentEngine loop
 let character;
@@ -25,9 +26,9 @@ let activeDragon;
 // Initialize array for game events
 // Each event will be an object containing 
 // { 
-//  text: the event text,
-//  class: list of classes to apply styling to this event
-// }
+    //  text: the event text,
+    //  class: list of classes to apply styling to this event
+    // }
 let gameEvents = [];
 
 const game = document.querySelector('#game');
@@ -36,92 +37,6 @@ const storyContainer = document.querySelector('#story-container');
 const choices = document.querySelector('#choices');
 const setupContainer = document.querySelector('#setup-container');
 const setupForm = document.querySelector('#setup-form');
-
-// =================================================================================
-// SETUP FOR CANVAS RENDERING
-// 2D rendering context for canvas element
-// This is used for drawing shapes, text, images, etc.
-// =================================================================================
-game.setAttribute('height', getComputedStyle(game)['height']);
-game.setAttribute('width', getComputedStyle(game)['width']);
-const ctx = game.getContext('2d');
-
-// =================================================================================
-// MAP LEGEND
-// G = green dragon, W = white dragon, R = red dragon, Y = yellow dragon
-// g = green book, w = white book, r = red book, y = yellow book
-// C = character
-// 0 = wall tile
-// - = floor tile
-//
-// 0 values are used by renderMap function to create functional barriers
-// other values are for easily visually laying out the map and have no functional effect
-// =================================================================================
-
-let map = [
-//    0    1    2    3    4    5    6    7    8
-    ['0', '0', '0', '0', '0', '0', '0', '0', '0'], // 00
-    ['0', 'w', '0', '-', '-', '-', '0', 'g', '0'], // 01
-    ['0', 'W', '0', '-', '-', '-', '0', 'R', '0'], // 02
-    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 03
-    ['0', '-', '-', '0', '0', '0', '-', '-', '0'], // 04
-    ['0', '-', '-', '0', 'G', '0', '-', '-', '0'], // 05
-    ['0', '-', '-', '0', '-', '0', '-', '-', '0'], // 06
-    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 07
-    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 08
-    ['0', 'Y', '0', '-', '-', '-', '0', '-', '0'], // 09
-    ['0', 'r', '0', '-', '-', '-', '0', 'y', '0'], // 10
-    ['0', '0', '0', '0', '-', '0', '0', '0', '0'],  // 11
-    ['0', '0', '0', '0', 'C', '0', '0', '0', '0']  // 12
-];
-
-// =================================================================================
-// IMAGES FOR USE WITH MAP
-// =================================================================================
-const wallTile = document.createElement('img');
-wallTile.src = './img/stone-wall.png';
-
-const floorTile = document.createElement('img');
-floorTile.src = './img/stone-floor.png';
-
-const darkTile = document.createElement('img');
-darkTile.src = './img/dark-tile.png';
-
-const yellowBook = document.createElement('img');
-yellowBook.src = './img/book-yellow.png';
-
-const redBook = document.createElement('img');
-redBook.src = './img/book-red.png';
-
-const whiteBook = document.createElement('img');
-whiteBook.src = './img/book-white.png';
-
-const greenBook = document.createElement('img');
-greenBook.src = './img/book-green.png';
-
-const yellowDragon = document.createElement('img');
-yellowDragon.src = './img/dragon-yellow.png';
-
-const redDragon = document.createElement('img');
-redDragon.src = './img/dragon-red.png';
-
-const whiteDragon = document.createElement('img');
-whiteDragon.src = './img/dragon-white.png';
-
-const hydraFive = document.createElement('img');
-hydraFive.src = './img/hydra5.png';
-
-const hydraFour = document.createElement('img');
-hydraFour.src = './img/hydra4.png';
-
-const hydraThree = document.createElement('img');
-hydraThree.src = './img/hydra3.png';
-
-const hydraTwo = document.createElement('img');
-hydraTwo.src = './img/hydra2.png';
-
-const hydraOne = document.createElement('img');
-hydraOne.src = './img/hydra1.png';
 
 // Set up game status div, which will be displayed when game starts
 const gameStatus = document.createElement('div');
@@ -167,6 +82,103 @@ const attackButtons = document.createElement('div');
         acidButton.disabled = true;
 
 attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButton);
+
+// =================================================================================
+// SETUP FOR CANVAS RENDERING
+// 2D rendering context for canvas element
+// This is used for drawing shapes, text, images, etc.
+// =================================================================================
+game.setAttribute('height', getComputedStyle(game)['height']);
+game.setAttribute('width', getComputedStyle(game)['width']);
+const ctx = game.getContext('2d');
+
+// =================================================================================
+// MAP LEGEND
+// G = green dragon, W = white dragon, R = red dragon, Y = yellow dragon
+// g = green book, w = white book, r = red book, y = yellow book
+// C = character
+// 0 = wall tile
+// - = floor tile
+//
+// 0 values are used by renderMap function to create functional barriers
+// other values are for easily visually laying out the map and have no functional effect
+// =================================================================================
+
+let map = [
+    //    0    1    2    3    4    5    6    7    8
+    ['0', '0', '0', '0', '0', '0', '0', '0', '0'], // 00
+    ['0', 'w', '0', '-', '-', '-', '0', 'g', '0'], // 01
+    ['0', 'W', '0', '-', '-', '-', '0', 'R', '0'], // 02
+    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 03
+    ['0', '-', '-', '0', '0', '0', '-', '-', '0'], // 04
+    ['0', '-', '-', '0', 'G', '0', '-', '-', '0'], // 05
+    ['0', '-', '-', '0', '-', '0', '-', '-', '0'], // 06
+    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 07
+    ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 08
+    ['0', 'Y', '0', '-', '-', '-', '0', '-', '0'], // 09
+    ['0', 'r', '0', '-', '-', '-', '0', 'y', '0'], // 10
+    ['0', '0', '0', '0', '-', '0', '0', '0', '0'],  // 11
+    ['0', '0', '0', '0', 'C', '0', '0', '0', '0']  // 12
+];
+
+// =================================================================================
+// IMAGES FOR USE WITH MAP
+// =================================================================================
+
+// Tiles
+const wallTile = document.createElement('img');
+    wallTile.src = './img/stone-wall.png';
+
+const floorTile = document.createElement('img');
+    floorTile.src = './img/stone-floor.png';
+
+const darkTile = document.createElement('img');
+    darkTile.src = './img/dark-tile.png';
+
+// Books
+const yellowBook = document.createElement('img');
+    yellowBook.src = './img/book-yellow.png';
+
+const redBook = document.createElement('img');
+    redBook.src = './img/book-red.png';
+
+const whiteBook = document.createElement('img');
+    whiteBook.src = './img/book-white.png';
+
+const greenBook = document.createElement('img');
+    greenBook.src = './img/book-green.png';
+
+// Dragons
+const yellowDragon = document.createElement('img');
+    yellowDragon.src = './img/dragon-yellow.png';
+
+const redDragon = document.createElement('img');
+    redDragon.src = './img/dragon-red.png';
+
+const whiteDragon = document.createElement('img');
+    whiteDragon.src = './img/dragon-white.png';
+
+// Hydra phases
+const hydraFive = document.createElement('img');
+    hydraFive.src = './img/hydra5.png';
+const hydraFour = document.createElement('img');
+    hydraFour.src = './img/hydra4.png';
+const hydraThree = document.createElement('img');
+    hydraThree.src = './img/hydra3.png';
+const hydraTwo = document.createElement('img');
+    hydraTwo.src = './img/hydra2.png';
+const hydraOne = document.createElement('img');
+    hydraOne.src = './img/hydra1.png';
+
+// Dragon death poofs
+const poof1 = document.createElement('img');
+    poof1.src = './img/poof1.png';
+const poof2 = document.createElement('img');
+    poof2.src = './img/poof2.png';
+const poof3 = document.createElement('img');
+    poof3.src = './img/poof3.png';    
+const poof4 = document.createElement('img');
+    poof4.src = './img/poof4.png';
 
 // =================================================================================
 // EVENT LISTENERS
@@ -288,7 +300,7 @@ class Character {
     attack(attackType) {
         // disable attacks for 3 seconds
         this.disableAttacks();
-        attackTimeout = setTimeout(() => { character.enableAttacks() }, 3000);
+        attackTimeout = setTimeout(() => { this.enableAttacks() }, 3000);
 
         // calculate attack success/damage/message
         let attackSize = 0;
@@ -322,7 +334,8 @@ class Character {
                 break;
         }
 
-        gameEvents.unshift({ text: attackMsg, class: 'heroattack' });
+        gameEvents.unshift({ text: attackMsg, class: attackType });
+        console.log(attackType);
         updateStory();
         if (attackSize > 0) { // if the attack is a hit
             activeDragon.receiveAttack(attackSize, attackType);
@@ -429,7 +442,7 @@ class Dragon {
         }
             
         attackMsg += ` ${attackType} breath!`;
-        gameEvents.unshift({ text: attackMsg, class: 'enemyattack' });
+        gameEvents.unshift({ text: attackMsg, class: attackType });
         if (attackSize > 0) { // if the attack is a hit
             character.receiveAttack(attackSize, attackType);
         }
@@ -458,10 +471,49 @@ class Dragon {
 
     die() {
         this.alive = false;
+
+        // create a poof effect that renders on the map
+        poofs.push(new Poof(this.x, this.y));
+
         gameEvents.unshift({ text: `${character.name} has slain the ${this.name}!`, class: 'storymsg' });
 
         // exit combat
         endCombat();
+    }
+}
+
+class Poof {
+    constructor(poofX, poofY) {
+        this.x = poofX;
+        this.y = poofY;
+        this.height = gridSize;
+        this.width = gridSize;
+        this.img = poof1;
+        this.incrementer = 0;
+
+        this.increment();
+    }
+
+    increment() {
+        this.incrementer++;
+        if(this.incrementer > 4) {
+            // using shift instead of pop ensures that the oldest poof is the one that is removed
+            poofs.shift();
+        } else {
+            this.img.src = `./img/poof${this.incrementer}.png`;
+            
+            setTimeout(() => {
+                this.increment();
+            }, 1000);
+        }
+    }
+
+    render() {
+        if (isVisible(this)) {
+                let xOffset = character.x - this.x;
+                let yOffset = character.y - this.y;
+                ctx.drawImage(this.img, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
+        }       
     }
 }
 
@@ -477,7 +529,7 @@ class Item {
     }
     
     render() {
-        // if item is alive (hasn't been picked up yet), draw item on canvas
+        // if item is alive (hasn't been picked up yet), and is visible, draw item on canvas
         if (isVisible(this) && this.alive) {
             let xOffset = character.x - this.x;
             let yOffset = character.y - this.y;
@@ -491,19 +543,19 @@ class Item {
         switch(this.name) {
             case 'yellow book':
                 character.attackTypes.push('shock');
-                gameEvents.unshift({ text: `${character.name} learns a shock attack!`, class: 'storymsg' });
+                gameEvents.unshift({ text: `${character.name} gains knowledge of shock!`, class: 'shock' });
                 break;
             case 'red book':
                 character.attackTypes.push('fire');
-                gameEvents.unshift({ text: `${character.name} learns a fire attack!`, class: 'storymsg' });
+                gameEvents.unshift({ text: `${character.name} gains knowledge of fire!`, class: 'fire' });
                 break;
             case 'white book':
                 character.attackTypes.push('ice');
-                gameEvents.unshift({ text: `${character.name} learns an ice attack!`, class: 'storymsg' });
+                gameEvents.unshift({ text: `${character.name} gains knowledge of ice!`, class: 'ice' });
                 break;
             case 'green book':
                 character.attackTypes.push('acid');
-                gameEvents.unshift({ text: `${character.name} learns an acid attack!`, class: 'storymsg' });
+                gameEvents.unshift({ text: `${character.name} gains knowledge of acid!`, class: 'acid' });
                 break;
         }
         this.alive = false;
@@ -662,7 +714,13 @@ function renderDragons() {
 function renderItems() {
     items.forEach((i) => {
         i.render();
-    })
+    });
+}
+
+function renderPoofs() {
+    poofs.forEach((p) => {
+        p.render();
+    });
 }
 
 function clearCanvas() {
@@ -679,6 +737,7 @@ function movementEngine() {
     renderMap();
     renderDragons();
     renderItems();
+    renderPoofs();
     character.render();
     
     updateStory();

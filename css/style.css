@@ -37,7 +37,7 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-image: url('../img/parchment-gold.png');
+    background-image: url('../img/parchment-yellow.png');
 }
 
 main {
@@ -101,14 +101,22 @@ main {
     color: purple;
 }
 
-.enemyattack {
+.normal {
+    color: black;
+}
+
+.fire {
     color: red;
 }
 
-.heroattack {
+.ice {
     color: blue;
 }
 
-.item {
+.acid {
     color: green;
+}
+
+.shock {
+    color: yellow;
 }
