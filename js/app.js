@@ -180,6 +180,16 @@ const poof3 = document.createElement('img');
 const poof4 = document.createElement('img');
     poof4.src = './img/poof4.png';
 
+// Game start, over, and win images
+const gameStartImg = document.createElement('img');
+    gameStartImg.src = './img/game-start.png';
+
+const gameOverImg = document.createElement('img');
+    gameOverImg.src = './img/game-over.png';
+
+const gameWinImg = document.createElement('img');
+    gameWinImg.src = './img/game-win.png'
+
 // =================================================================================
 // EVENT LISTENERS
 // =================================================================================
@@ -246,6 +256,11 @@ window.addEventListener('DOMContentLoaded', () => {
     initStory();
     gameEvents.unshift({ text: 'Save the countryside from a pack of ravaging dragons!', class: 'storymsg' });
     updateStory();
+
+    clearCanvas();
+
+    // don't know why this isn't working without the setTimeout, but this fixes it
+    setTimeout(() => {drawAll(gameStartImg)}, 10);
 });
 
 // =================================================================================
@@ -372,6 +387,8 @@ class Character {
         initStory();
         gameEvents.unshift({ text: `${this.name} was slain!`, class: 'emphasis' });
         gameEvents.unshift({ text: 'Dragons continue to ravage the countryside until a worthy hero arrives.', class: 'storymsg' });
+
+        drawAll(gameOverImg);
 
         resetGame();
     }
@@ -960,18 +977,28 @@ function updateStory() {
     displayStory();
 }
 
+function drawAll(imgToDraw) {
+    clearCanvas();
+    for (let i = 0; i < (viewRange * 2) + 1; i++) {
+        for (let j = 0; j < (viewRange * 2) + 1; j++) {
+            ctx.drawImage(imgToDraw, j * gridSize, i * gridSize, gridSize, gridSize);
+        }
+    }
+}
+
 function winGame() {
     initStory();
     gameEvents.unshift({ text: `${character.name} hath smote the ravaging horde of dragons!`, class: 'storymsg' });
     gameEvents.unshift({ text: 'The country folk may now enjoy a life of peace and prosperity!', class: 'storymsg' });
     gameEvents.unshift({ text: `Hail ${character.name}!!`, class: 'emphasis' });
+
+    drawAll(gameWinImg);
     
     resetGame();
 }
 
 function resetGame() {
     clearInterval(runGame);
-    clearCanvas();
     
     choices.innerHTML = '';
     choices.append(setupContainer);
@@ -995,4 +1022,3 @@ function checkForCollisions() {
         }
     });
 }
-
