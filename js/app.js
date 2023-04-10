@@ -1,8 +1,12 @@
 // =================================================================================
 // GLOBAL DOM / VARIABLES
 // =================================================================================
-const gridSize = 32; // number of pixels in each map square, also corresponds to size of character/monster/item sprites (32 x 32)
-const viewRange = 3; // number of map squares in each direction that the character can see
+// number of pixels in each map square, also corresponds to size of character/monster/item sprites (32 x 32)
+const gridSize = 32; 
+
+// number of map squares in each direction that the character can see
+// need to adjust canvas size in style.css if this number gets big
+const viewRange = 3; 
 
 const game = document.querySelector('#game');
 const story = document.querySelector('#story');
@@ -36,7 +40,11 @@ let attackTimeout;
 let activeDragon;
 
 // Initialize array for game events
-// Important game events will be added to this array and displayed
+// Each event will be an object containing 
+// { 
+//  text: the event text,
+//  class: list of classes to apply styling to this event
+// }
 let gameEvents = [];
 
 // =================================================================================
@@ -369,9 +377,9 @@ class Character {
     }
     
     render() {
-        // since view is centered on character, canvas location of character will always be 3x3
+        // since view is centered on character, canvas location of character will always be viewRange x viewRange
         // draw character on canvas
-        ctx.drawImage(this.img, 3 * gridSize, 3 * gridSize, this.width, this.height);
+        ctx.drawImage(this.img, viewRange * gridSize, viewRange * gridSize, this.width, this.height);
     
         // update game status
         this.updateGameStatus();
@@ -488,11 +496,13 @@ class Item {
         this.y = itemY;
         this.alive = true;
     }
-
+    
     render() {
         // if item is alive (hasn't been picked up yet), draw item on canvas
-        if (this.alive) {
-            ctx.drawImage(this.img, this.x * gridSize, this.y * gridSize, this.width, this.height);
+        if (isVisible(this) && this.alive) {
+            let xOffset = character.x - this.x;
+            let yOffset = character.y - this.y;
+            ctx.drawImage(this.img, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
         }
     }
 
@@ -612,7 +622,7 @@ function isVisible(obj) {
     return false;
 }
 
-// draw the 7x7 map square around character
+// draw the (viewRange * 2 + 1) by (viewRange * 2 + 1) map square around character
 function renderMap() { 
     // // // // // // //
     // - - - - - - - //
@@ -673,9 +683,9 @@ function renderDragons() {
 }
 
 function renderItems() {
-    // items.forEach((i) => {
-    //     i.render();
-    // })
+    items.forEach((i) => {
+        i.render();
+    })
 }
 
 function clearStory() {
@@ -791,7 +801,6 @@ function checkForCollisions() {
 
     items.forEach((i) => {
         if(i.alive && i.x === character.x && i.y === character.y) {
-            gameEvents.unshift(`${character.name} finds a ${i.name}.`);
             i.pickup();
         }
     });
