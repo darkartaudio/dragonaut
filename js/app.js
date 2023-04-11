@@ -17,7 +17,7 @@ let poofs = [];
 let character;
 let runGame;
 
-// Initializes variable for attack timeout, so that it can be cancelled when dragon dies
+// Initializes variable for attack timeout, cancelled when combat ends
 let attackTimeout;
 
 // Initialize active dragon holder for combat
@@ -255,6 +255,8 @@ acidButton.addEventListener('click', (e) => {
 window.addEventListener('DOMContentLoaded', () => {
     initStory();
     gameEvents.unshift({ text: 'Save the countryside from a pack of ravaging dragons!', class: 'storymsg' });
+    gameEvents.unshift({ text: '', class: 'invis' });
+    gameEvents.unshift({ text: '', class: 'invis' });
     updateStory();
 
     clearCanvas();
@@ -386,6 +388,7 @@ class Character {
     die() {
         initStory();
         gameEvents.unshift({ text: `${this.name} was slain!`, class: 'emphasis' });
+        gameEvents.unshift({ text: '', class: 'invis' });
         gameEvents.unshift({ text: 'Dragons continue to ravage the countryside until a worthy hero arrives.', class: 'storymsg' });
 
         drawAll(gameOverImg);
@@ -977,11 +980,15 @@ function updateStory() {
     displayStory();
 }
 
-function drawAll(imgToDraw) {
+async function drawAll(imgToDraw) {
+    let delayTime = 50;
+    
     clearCanvas();
+
     for (let i = 0; i < (viewRange * 2) + 1; i++) {
         for (let j = 0; j < (viewRange * 2) + 1; j++) {
             ctx.drawImage(imgToDraw, j * gridSize, i * gridSize, gridSize, gridSize);
+            await new Promise(r => setTimeout(r, delayTime));
         }
     }
 }
@@ -989,7 +996,9 @@ function drawAll(imgToDraw) {
 function winGame() {
     initStory();
     gameEvents.unshift({ text: `${character.name} hath smote the ravaging horde of dragons!`, class: 'storymsg' });
+    gameEvents.unshift({ text: '', class: 'invis' });
     gameEvents.unshift({ text: 'The country folk may now enjoy a life of peace and prosperity!', class: 'storymsg' });
+    gameEvents.unshift({ text: '', class: 'invis' });
     gameEvents.unshift({ text: `Hail ${character.name}!!`, class: 'emphasis' });
 
     drawAll(gameWinImg);
