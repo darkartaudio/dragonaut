@@ -276,7 +276,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // displays a splash image across the canvas
     // don't know why this isn't working without the setTimeout, but this fixes it
-    setTimeout(() => {drawAll(gameStartImg)}, 50);
+    setTimeout(() => {drawAll(gameStartImg)}, 250);
 });
 
 // =================================================================================
