@@ -1,6 +1,7 @@
 // =================================================================================
-// GLOBAL DOM / VARIABLES
+// GLOBAL VARIABLES
 // =================================================================================
+
 // number of pixels in each map square, also corresponds to size of character/monster/item sprites (32 x 32)
 const gridSize = 32; 
 
@@ -8,16 +9,16 @@ const gridSize = 32;
 // need to adjust canvas size in style.css if this number gets big
 const viewRange = 3; 
 
-// Initialize arrays for dragons and items
+// Initialize arrays for dragons, items, and poof effects
 let dragons = [];
 let items = [];
 let poofs = [];
 
-// Initializes player character and variable to contain movmentEngine loop
+// Initialize player character and variable to contain movmentEngine loop
 let character;
 let runGame;
 
-// Initializes variable for attack timeout, cancelled when combat ends
+// Initialize variable for attack timeout, cancelled when combat ends
 let attackTimeout;
 
 // Initialize active dragon holder for combat
@@ -30,6 +31,10 @@ let activeDragon;
     //  class: list of classes to apply styling to this event
     // }
 let gameEvents = [];
+
+// =================================================================================
+// GLOBAL DOM VARIABLES
+// =================================================================================
 
 const game = document.querySelector('#game');
 const story = document.querySelector('#story');
@@ -51,7 +56,7 @@ const gameStatus = document.createElement('div');
 
 gameStatus.append(statusName, statusClass, statusHealth);
 
-// Set up attackButtons div, which will be updated when character finds a new item
+// Set up attackButtons div, which is the player interface for combat
 const attackButtons = document.createElement('div');
     attackButtons.setAttribute('id', 'attack-buttons');
 
@@ -88,12 +93,16 @@ attackButtons.append(normalButton, shockButton, fireButton, iceButton, acidButto
 // 2D rendering context for canvas element
 // This is used for drawing shapes, text, images, etc.
 // =================================================================================
+
 game.setAttribute('height', getComputedStyle(game)['height']);
 game.setAttribute('width', getComputedStyle(game)['width']);
 const ctx = game.getContext('2d');
 
 // =================================================================================
-// MAP LEGEND
+// MAP
+// =================================================================================
+// LEGEND
+//
 // G = green dragon, W = white dragon, R = red dragon, Y = yellow dragon
 // g = green book, w = white book, r = red book, y = yellow book
 // C = character
@@ -170,7 +179,7 @@ const hydraTwo = document.createElement('img');
 const hydraOne = document.createElement('img');
     hydraOne.src = './img/hydra1.png';
 
-// Dragon death poofs
+// Dragon death poof phases
 const poof1 = document.createElement('img');
     poof1.src = './img/poof1.png';
 const poof2 = document.createElement('img');
@@ -200,7 +209,7 @@ function gameSetup(e) {
     e.preventDefault();
     
     // create new character with name and class as chosen by user,
-    // then reset and remove setup form, display game status instead
+    // then reset and remove setup form, displaying game status instead
     charName = setupForm.elements['character-name'].value;
     charClass = setupForm.elements['character-class'].value;
     setupForm.reset();
@@ -214,11 +223,14 @@ function gameSetup(e) {
     gameEvents.unshift({ text: 'Gather items and slay dragons!', class: 'storymsg'});
     gameEvents.unshift({ text: 'a - left | d - right | w - up | s - down', class: 'storymsg'});
     
+    // add dragons and magic items to the game
     addDragons();
     addItems();
     
+    // start movement engine
     runGame = setInterval(movementEngine, 60);
     
+    // stop movement handler if it's already running, then start movement handler
     removeMovementHandler();
     document.addEventListener('keydown', movementHandler);
 }
@@ -252,6 +264,7 @@ acidButton.addEventListener('click', (e) => {
     character.attack('acid');
 });
 
+// when the page loads, display tagline and draw splash image to canvas
 window.addEventListener('DOMContentLoaded', () => {
     initStory();
     gameEvents.unshift({ text: 'Save the countryside from a pack of ravaging dragons!', class: 'storymsg' });
@@ -261,8 +274,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     clearCanvas();
 
+    // displays a splash image across the canvas
     // don't know why this isn't working without the setTimeout, but this fixes it
-    setTimeout(() => {drawAll(gameStartImg)}, 10);
+    setTimeout(() => {drawAll(gameStartImg)}, 50);
 });
 
 // =================================================================================
@@ -273,7 +287,11 @@ class Character {
         this.name = charName;
         this.class = charClass;
         this.health = 50 + Math.floor(Math.random() * 10); // start with 50 plus 0-10 hit points
+
+        // attack types the character has knowledge of
         this.attackTypes = ['normal'];
+
+        // height and width of character image
         this.height = gridSize;
         this.width = gridSize;
 
@@ -317,12 +335,13 @@ class Character {
     
     // enables attack buttons when attacks are available
     enableAttacks() {
-        this.attackTypes.forEach((i) => {
+        this.attackTypes.forEach((i) => { // iterates through attacks of which player has knowledge
             let btn = document.querySelector(`#${i}-attack`);
-            btn.disabled = false;
+            btn.disabled = false; // enables known buttons
         });
     }
 
+    // called when the character attempts to hit an enemy with an attack
     attack(attackType) {
         // disable attacks for 3 seconds
         this.disableAttacks();
@@ -363,20 +382,23 @@ class Character {
         gameEvents.unshift({ text: attackMsg, class: attackType });
         updateStory();
         if (attackSize > 0) { // if the attack is a hit
-            activeDragon.receiveAttack(attackSize, attackType);
+            activeDragon.receiveAttack(attackSize, attackType); // dragon object receives the attack
         }
     }
     
+    // called when an enemy hits the character with an attack
     receiveAttack(attackSize, attackType) {
         this.attackTypes.forEach((a) => {
-            if (a === attackType) {
-                attackSize = Math.floor(attackSize * 0.5);
+            if (a === attackType) { // if character has knowledge of attack type
+                attackSize = Math.floor(attackSize * 0.5); // attack is less effective
                 gameEvents.unshift({ text: `${character.name} resists some of the damage.`, class: 'emphasis' });
             }
         });
 
+        // character takes damage
         this.health -= attackSize;
 
+        // if attack kills the character
         if (this.health <= 0) {
             this.health = 0;
             this.die();
@@ -385,14 +407,17 @@ class Character {
         this.updateGameStatus();
     }
 
+    // called when an attack has killed the character
     die() {
         initStory();
         gameEvents.unshift({ text: `${this.name} was slain!`, class: 'emphasis' });
         gameEvents.unshift({ text: '', class: 'invis' });
         gameEvents.unshift({ text: 'Dragons continue to ravage the countryside until a worthy hero arrives.', class: 'storymsg' });
 
+        // draw death splash image on the canvas
         drawAll(gameOverImg);
 
+        // display character creation window so that player can restart game
         resetGame();
     }
     
@@ -414,12 +439,24 @@ class Dragon {
     constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist) {
         this.name = dragonName;
         this.health = dragonHealth;
+
+        // attack type(s) which are extra effective against the dragon
         this.effective = effective;
+
+        // attack type(s) which are less effective against the dragon
         this.resist = resist;
+
+        // whether the dragon is alive or dead, important for rendering dragons on map as well as checking for victory
         this.alive = true;
+        
+        // html img tag for dragon icon
         this.img = dragonImg;
+        
+        // x/y location of dragon on map
         this.x = dragonX;
         this.y = dragonY;
+        
+        // height/width of dragon icon
         this.height = gridSize;
         this.width = gridSize;
     }
@@ -427,12 +464,17 @@ class Dragon {
     render() {
         // if dragon is alive, draw dragon on canvas
         if (isVisible(this) && this.alive) {
+
+            // find distance from dragon to character
             let xOffset = character.x - this.x;
             let yOffset = character.y - this.y;
+            
+            // draw dragon on map
             ctx.drawImage(this.img, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
         }
     }
 
+    // called when the dragon attacks the character
     attack() {
         // calculate attack success/damage/message
         let attackSize = 0;
@@ -454,6 +496,7 @@ class Dragon {
 
         attackMsg += ` ${character.name} with `;
 
+        // set attack type depending on color of dragon
         switch (this.name) {
             case 'yellow dragon':
                 attackType = 'shock';
@@ -469,24 +512,25 @@ class Dragon {
         attackMsg += ` ${attackType} breath!`;
         gameEvents.unshift({ text: attackMsg, class: attackType });
         if (attackSize > 0) { // if the attack is a hit
-            character.receiveAttack(attackSize, attackType);
+            character.receiveAttack(attackSize, attackType); // character receives the attack
         }
     }
 
+    // called when the character hits the dragon with an attack
     receiveAttack(attackSize, attackType) {
-        if (attackType === this.effective) {
-            attackSize = Math.floor(attackSize * 2);
+        if (attackType === this.effective) { // if the attack type is extra effective against the dragon
+            attackSize = Math.floor(attackSize * 2); // the attack size is doubled
             gameEvents.unshift({ text: `The ${this.name} howls in agony!`, class: 'emphasis' });
         }
 
-        if (attackType === this.resist) {
-            attackSize = Math.floor(attackSize * 0.5);
+        if (attackType === this.resist) { // if the attack type is less effective against the dragon
+            attackSize = Math.floor(attackSize * 0.5); // the attack size is halved
             gameEvents.unshift({ text: `The ${this.name} resists some of the damage.`, class: 'emphasis' });
         }
 
-        this.health -= attackSize;
+        this.health -= attackSize; // the dragon takes damage
 
-        if (this.health <= 0) {
+        if (this.health <= 0) { // if the attack kills the dragon
             this.health = 0;
             this.die();
         }
@@ -494,6 +538,7 @@ class Dragon {
         updateStory();
     }
 
+    // called when an attack kills the dragon
     die() {
         this.alive = false;
 
@@ -507,14 +552,16 @@ class Dragon {
     }
 }
 
+// "boss" character, a tougher dragon with multiple phases
 class Hydra extends Dragon {
     constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist) {
         super (dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist);
 
-        this.phase = 5;
-        this.headDown = `One of the hydra's heads falls dead to the ground!`;
+        this.phase = 5; // the hydra must be "killed" 5 times to actually die
+        this.headDown = `One of the hydra's heads falls dead to the ground!`; // message to display when one of the heads has been killed
     }
 
+    // called when the hydra attacks the player
     attack() {
         // calculate attack success/damage/message
         let attackSize = 0;
@@ -536,6 +583,7 @@ class Hydra extends Dragon {
 
         attackMsg += ` ${character.name} with `;
 
+        // set the attack type depending on which phase the hydra is in
         switch (this.phase) {
             case 5:
                 attackType = 'chromatic';
@@ -559,11 +607,14 @@ class Hydra extends Dragon {
         gameEvents.unshift({ text: attackMsg, class: attackType });
         
         if (attackSize > 0) { // if the attack is a hit
-            character.receiveAttack(attackSize, attackType);
+            character.receiveAttack(attackSize, attackType); // character receives the attack
         }
     }
 
+    // called when an attack "kills" the hydra
     die() {
+        // change the phase of the dragon and replenish health for most phases 5-2
+        // type of effective and resisted attacks change, as well as image
         switch (this.phase) {
             case 5:
                 gameEvents.unshift({ text: this.headDown, class: 'emphasis' });
@@ -593,17 +644,19 @@ class Hydra extends Dragon {
                 this.img = hydraOne;
                 this.health = 20;
                 break;
-            case 1:
+            case 1: // for phase one, hydra actually dies
                 super.die();
                 return true;
                 break;
         }
-        this.render();
-        this.phase--;
+        this.render(); // redraw the hydra 
+        this.phase--; // hydra phase number is decremented
     }
 
     render() {
-        // since the movement engine isn't redrawing the canvas during combat, we need to take care of a few things
+        // since the movement engine isn't redrawing the canvas during combat, we need to take care of a few things to swap hydra images
+
+        // find distance between hydra and character
         let xOffset = character.x - this.x;
         let yOffset = character.y - this.y;
 
@@ -618,36 +671,51 @@ class Hydra extends Dragon {
     }
 }
 
+// a visual effect that displays when a dragon dies
 class Poof {
     constructor(poofX, poofY) {
+        // x/y coordinates of effect
         this.x = poofX;
         this.y = poofY;
+
+        // height and width of poof icons
         this.height = gridSize;
         this.width = gridSize;
+
+        // first phase poof image
         this.img = poof1;
+
+        // keeps track of which phase the poof is in
         this.incrementer = 0;
 
+        // and activate phase 1
         this.increment();
     }
 
     increment() {
-        this.incrementer++;
-        if(this.incrementer > 4) {
+        this.incrementer++; // increment to next poof phase
+        if(this.incrementer > 4) { // if greater than four, effect is over
             // using shift instead of pop ensures that the oldest poof is the one that is removed
             poofs.shift();
         } else {
-            this.img.src = `./img/poof${this.incrementer}.png`;
+            this.img.src = `./img/poof${this.incrementer}.png`; // change poof to different image
             
+            // in one second, do this all again until poof effect is over
             setTimeout(() => {
                 this.increment();
             }, 1000);
         }
     }
 
+    // draws the poof on the screen
     render() {
         if (isVisible(this)) {
+
+                // finds distance from poof effect to character
                 let xOffset = character.x - this.x;
                 let yOffset = character.y - this.y;
+
+                // draws poof on map
                 ctx.drawImage(this.img, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
         }       
     }
@@ -656,19 +724,31 @@ class Poof {
 class Item {
     constructor(itemName, itemImg, itemX, itemY) {
         this.name = itemName;
-        this.height = gridSize;
-        this.width = gridSize;
+
+        // img icon for the item
         this.img = itemImg;
+
+        // x/y coordinates of item
         this.x = itemX;
         this.y = itemY;
+
+        // height/width of img icon
+        this.height = gridSize;
+        this.width = gridSize;
+
+        // whether the item has been picked up yet
         this.alive = true;
     }
     
     render() {
         // if item is alive (hasn't been picked up yet), and is visible, draw item on canvas
         if (isVisible(this) && this.alive) {
+
+            // find distance between item and character
             let xOffset = character.x - this.x;
             let yOffset = character.y - this.y;
+
+            // draw item on canvas
             ctx.drawImage(this.img, (viewRange - xOffset) * gridSize, (viewRange - yOffset) * gridSize, this.width, this.height);
         }
     }
@@ -765,6 +845,7 @@ function initStory() {
     ];
 }
 
+// adds all of the dragons to the game in respective locations
 function addDragons() {
     dragons = [];
     // constructor(dragonName, dragonImg, dragonHealth, dragonX, dragonY, effective, resist)
@@ -774,6 +855,7 @@ function addDragons() {
     dragons.push(new Hydra('five-headed hydra', hydraFive, 20, 4, 5, '', ''));
 }
 
+// adds all of the items to the game in respective locations
 function addItems() {
     items = [];
     items.push(new Item('yellow book', yellowBook, 7, 10));
@@ -782,6 +864,7 @@ function addItems() {
     items.push(new Item('green book', greenBook, 7, 1));
 }
 
+// checks if the object is currently visible by the character
 function isVisible(obj) {
     // game map coordinates relative to character
     let startX = character.x - viewRange;
@@ -805,7 +888,7 @@ function isVisible(obj) {
 
 // draw the (viewRange * 2 + 1) by (viewRange * 2 + 1) map square around character
 function renderMap() { 
-    // // // // // // //
+    // // // // // // // <-- example is 7x7
     // - - - - - - - //
     // - - - - - - - //
     // - - - - - - - //
@@ -857,24 +940,28 @@ function renderMap() {
     }
 }
 
+// draws all of the visible and alive dragons on the canvas
 function renderDragons() {
     dragons.forEach((d) => {
         d.render();
     });
 }
 
+// draws all of the visible and alive items on the canvas
 function renderItems() {
     items.forEach((i) => {
         i.render();
     });
 }
 
+// draws all of the visible and alive poofs onto the canvas
 function renderPoofs() {
     poofs.forEach((p) => {
         p.render();
     });
 }
 
+// blanks out the canvas
 function clearCanvas() {
     ctx.clearRect(0, 0, game.width, game.height);
 }
@@ -883,6 +970,7 @@ function clearCanvas() {
 // COMBAT AND MOVEMENT ENGINE FUNCTIONS
 // =================================================================================
 
+// will be called every 60ms when movement aspect of the game is active
 function movementEngine() {
     clearCanvas();
     
@@ -896,14 +984,15 @@ function movementEngine() {
 }
 
 function combatEngine() {
+    // if the dragon is still alive, it attacks
     if (activeDragon.alive) {
         activeDragon.attack();
-    } else { // dragon is dead
     }
     
     updateStory();
 }
 
+// stops the movement aspect of the game and starts the combat aspect, with "d" being the dragon being fought
 function combat(d) {
     // stop the movement
     removeMovementHandler();
@@ -975,24 +1064,34 @@ function displayStory() {
     }
 }
 
+// clears all story paragraphs, then displays the most recent story
 function updateStory() {
     clearStory();
     displayStory();
 }
 
+// takes a HTML img element
+// slowly draws the img on each square of the canvas in a splash effect
 async function drawAll(imgToDraw) {
     let delayTime = 50;
     
     clearCanvas();
 
+    // iterate through the X and Y axes of the canvas
     for (let i = 0; i < (viewRange * 2) + 1; i++) {
         for (let j = 0; j < (viewRange * 2) + 1; j++) {
+            // draw image to the current square
             ctx.drawImage(imgToDraw, j * gridSize, i * gridSize, gridSize, gridSize);
+
+            // pause before continuing
             await new Promise(r => setTimeout(r, delayTime));
         }
     }
 }
 
+// adds congratulation to story area
+// draws a splash image
+// resets game so that player can create another character and play again
 function winGame() {
     initStory();
     gameEvents.unshift({ text: `${character.name} hath smote the ravaging horde of dragons!`, class: 'storymsg' });
@@ -1006,10 +1105,15 @@ function winGame() {
     resetGame();
 }
 
+// resets game so that player may create another character and play again
 function resetGame() {
+    // stop any movement or combat engines that are running
     clearInterval(runGame);
     
+    // clear out the game status area
     choices.innerHTML = '';
+
+    // add the character creation setup form to the page and style appropriately
     choices.append(setupContainer);
     choices.style.justifyContent = 'center';
 }
@@ -1017,17 +1121,23 @@ function resetGame() {
 // =================================================================================
 // COLLISION DETECTION
 // =================================================================================
+
+// checks if the player has collided with any dragons or items
 function checkForCollisions() {
+    // iterates through dragons in the game
     dragons.forEach((d) => {
+        // if player collides with a dragon
         if(d.alive && d.x === character.x && d.y === character.y) {
             gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'emphasis' });
-            combat(d);
+            combat(d); // combat begins
         }
     });
 
+    // iterates through items in the game
     items.forEach((i) => {
+        // if player collides with an item
         if(i.alive && i.x === character.x && i.y === character.y) {
-            i.pickup();
+            i.pickup(); // character picks up the item
         }
     });
 }
