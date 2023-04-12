@@ -8,8 +8,7 @@ body {
     font-family: 'Cormorant Unicase', serif;
     color: black;
     text-align: center;
-    /* background-color: rgb(233, 232, 187); */
-    background-image: url('../img/metall001-new-tileable.png');
+    background-image: url('../img/metal-bg.png');
 }
 
 canvas {
