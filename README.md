@@ -5,6 +5,8 @@ A simple fantasy RPG, inspired by Final Fantasy.
 
 To play online, visit: https://dragonaut.netlify.app/
 
+---
+
 # HOW TO PLAY
 
 * Move the character around the board using the `W` `A` `S` `D` keys.
@@ -17,6 +19,10 @@ To play online, visit: https://dragonaut.netlify.app/
 * Win the game by slaying all of the dragons, freeing the peasants from their reign of terror!
 * If the character's HP falls to zero, the game is over!
 
+---
+
+# GAME FOOTAGE
+
 ### START SPLASH SCREEN
 ![Load Screen](screenshots/game-start.gif)
 
@@ -26,19 +32,25 @@ To play online, visit: https://dragonaut.netlify.app/
 ### COMBAT
 ![Combat](screenshots/combat.png)
 
-### ATTRIBUTION
+---
+
+# ATTRIBUTION
 All sprites and backgrounds are used under free license.
 * Sprites: https://opengameart.org/content/dungeon-crawl-32x32-tiles
 * Metallic background: https://opengameart.org/content/rusted-metal-texture-pack
 * Parchment background: https://opengameart.org/content/varied-parchment
 
+---
 
-### HOW TO INSTALL
+# HOW TO INSTALL
 1. `Fork` and `Clone` this repository to your machine.
 2. Open `index.html` in your browser to play Dragonaut.
 3. Open `index.html`, `app.js`, and `style.css` in a text editor to view/edit the code.
 
-### HOW IT WORKS
+---
+
+# HOW IT WORKS
+
 Dragonaut is comprised of two game phases:
 1. `Movement`
     * A movement engine runs on a 60ms interval, constantly refreshing the map within view of the character.
@@ -186,7 +198,9 @@ dragons.forEach((d) => {
 });
 ```
 
-## INTO THE FUTURE
+---
+
+# INTO THE FUTURE
 
 ### REVAMP COMBAT
 If I return to this project in the future, I'd like to revamp the `Combat` phase of the game, changing the display to a side-view with space between the character and enemy. This would create some real estate to use for attack animations.
@@ -194,12 +208,16 @@ If I return to this project in the future, I'd like to revamp the `Combat` phase
 ### MORE COMPLEX LEVELS, EXTENDED GAMEPLAY
 I'd also like to use this game engine to build some longer, more complex levels to figure out.
 
-## WHITEBOARDS
+---
+
+# WHITEBOARDS
 
 ### INITIAL BRAINSTORM SESSION
 ![Brainstorm](./whiteboards/proj1-brainstorm1-040323.png)
 
 ### INITIAL GRID LAYOUT
 ![Grid](./whiteboards/proj1-brainstorm2.png)
+
+---
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/4f7c989c-6745-4455-a2e9-fb50c005b212/deploy-status)](https://app.netlify.com/sites/dragonaut/deploys)
