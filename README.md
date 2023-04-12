@@ -27,10 +27,10 @@ To play online, visit: https://dragonaut.netlify.app/
 ![Load Screen](screenshots/game-start.gif)
 
 ### MOVEMENT
-![Movement](screenshots/movement.png)
+![Movement](screenshots/movement.gif)
 
 ### COMBAT
-![Combat](screenshots/combat.png)
+![Combat](screenshots/combat.gif)
 
 ---
 
@@ -73,6 +73,8 @@ class Hydra extends Dragon {
     ...
     // called when an attack "kills" the hydra
     die() {
+        gameEvents.unshift({ text: '', class: 'invis' }); // add spacer line to the story
+        
         // change the phase of the dragon and replenish health for phases 5-2
         // type of effective and resisted attacks change, as well as image
         switch (this.phase) {
@@ -102,7 +104,7 @@ class Hydra extends Dragon {
 ```
 
 ### THE MAP
-Dragonaut uses an HTML `<canvas>` to draw the game.
+Dragonaut uses an HTML `<canvas>` to draw out the game map.
 
 The map is stored in a two-dimensional array.
 
@@ -135,7 +137,7 @@ let map = [
 * 0 values are used by renderMap function to create functional barriers
 * other values are for easily visually laying out the map and have no functional effect
 
-The game uses the array to render the visible portion of the map.
+The game uses the array to render the visible portion of the map on the `<canvas>`.
 
 ```javascript
 // draw the (viewRange * 2 + 1) by (viewRange * 2 + 1) map square around character
@@ -184,7 +186,7 @@ function renderMap() {
 }
 ```
 ### COLLISION DETECTION
-Each character, enemy, or item fits exactly into a 32x32 square on the map, and is represented by X and Y coordinates in the two-dimensional `map` array. This makes collision detection a relatively simple matter.
+Each character, enemy, or item fits exactly into a 32x32 square on the map, and is represented by `x` and `y` coordinates in the two-dimensional `map` array. This makes collision detection a relatively simple matter.
 
 Snippet from `checkForCollisions()`
 
@@ -192,10 +194,42 @@ Snippet from `checkForCollisions()`
 dragons.forEach((d) => {
     // if player collides with a dragon, i.e. x and y coordinates are the same
     if(d.alive && d.x === character.x && d.y === character.y) {
+        gameEvents.unshift({ text: '', class: 'invis' }); // add spacer line to the story
         gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'emphasis' });
         combat(d); // combat begins
     }
 });
+```
+
+### IS VISIBLE
+Similarly, we check if an item or enemy `isVisible` by determining if its `x` and `y` coordinates fall within the character's `viewRange`.
+
+```javascript
+// number of map squares in each direction that the character can see
+const viewRange = 3;
+
+...
+
+function isVisible(obj) {
+    // game map coordinates relative to character
+    let startX = character.x - viewRange;
+    let endX = character.x + viewRange;
+    let startY = character.y - viewRange;
+    let endY = character.y + viewRange;
+
+    // if obj is within view, return true
+    if (
+        obj.x >= startX &&
+        obj.x <= endX &&
+        obj.y >= startY &&
+        obj.y <= endY
+    ) {
+        return true;
+    }
+
+    // otherwise return false
+    return false;
+}
 ```
 
 ---
@@ -206,7 +240,7 @@ dragons.forEach((d) => {
 If I return to this project in the future, I'd like to revamp the `Combat` phase of the game, changing the display to a side-view with space between the character and enemy. This would create some real estate to use for attack animations.
 
 ### MORE COMPLEX LEVELS, EXTENDED GAMEPLAY
-I'd also like to use this game engine to build some longer, more complex levels to figure out.
+I'd like to use this game engine to build some longer, more complex levels, with new items and enemy types.
 
 ---
 

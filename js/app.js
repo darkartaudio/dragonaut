@@ -402,8 +402,11 @@ class Character {
                 break;
         }
 
+        // display attack message to story section
+        gameEvents.unshift({ text: '', class: 'invis' });
         gameEvents.unshift({ text: attackMsg, class: attackType });
         updateStory();
+        
         if (attackSize > 0) { // if the attack is a hit
             activeDragon.receiveAttack(attackSize, attackType); // dragon object receives the attack
         }
@@ -533,7 +536,11 @@ class Dragon {
         }
             
         attackMsg += ` ${attackType} breath!`;
+
+        // display attack message to story section
+        gameEvents.unshift({ text: '', class: 'invis' });
         gameEvents.unshift({ text: attackMsg, class: attackType });
+        
         if (attackSize > 0) { // if the attack is a hit
             character.receiveAttack(attackSize, attackType); // character receives the attack
         }
@@ -568,6 +575,8 @@ class Dragon {
         // create a poof effect that renders on the map
         poofs.push(new Poof(this.x, this.y));
 
+        // display to story section
+        gameEvents.unshift({ text: '', class: 'invis' });
         gameEvents.unshift({ text: `${character.name} has slain the ${this.name}!`, class: 'emphasis' });
 
         // exit combat
@@ -627,6 +636,8 @@ class Hydra extends Dragon {
             
         attackMsg += ` ${attackType} breath!`;
 
+        // display attack message to story area
+        gameEvents.unshift({ text: '', class: 'invis' }); // add spacer line to the story
         gameEvents.unshift({ text: attackMsg, class: attackType });
         
         if (attackSize > 0) { // if the attack is a hit
@@ -636,6 +647,8 @@ class Hydra extends Dragon {
 
     // called when an attack "kills" the hydra
     die() {
+        gameEvents.unshift({ text: '', class: 'invis' }); // add spacer line to the story
+        
         // change the phase of the dragon and replenish health for phases 5-2
         // type of effective and resisted attacks change, as well as image
         switch (this.phase) {
@@ -779,6 +792,8 @@ class Item {
     // adds corresponding attack to character
     // sets alive = false (i.e. item has been picked up and will no longer render on board)
     pickup() {
+        gameEvents.unshift({ text: '', class: 'invis' }); // add a spacer line to the story
+        
         switch(this.name) {
             case 'yellow book':
                 character.attackTypes.push('shock');
@@ -797,7 +812,6 @@ class Item {
                 gameEvents.unshift({ text: `${character.name} gains knowledge of acid!`, class: 'acid' });
                 break;
         }
-        gameEvents.unshift({ text: '', class: 'invis' }); // add a spacer line to the story
         this.alive = false;
     }
 }
@@ -1166,6 +1180,7 @@ function checkForCollisions() {
     dragons.forEach((d) => {
         // if player collides with a dragon, i.e. x and y coordinates are the same
         if(d.alive && d.x === character.x && d.y === character.y) {
+            gameEvents.unshift({ text: '', class: 'invis' }); // add spacer line to the story
             gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'emphasis' });
             combat(d); // combat begins
         }
