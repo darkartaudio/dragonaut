@@ -114,7 +114,7 @@ const ctx = game.getContext('2d');
 // =================================================================================
 
 let map = [
-    //    0    1    2    3    4    5    6    7    8
+//    0    1    2    3    4    5    6    7    8
     ['0', '0', '0', '0', '0', '0', '0', '0', '0'], // 00
     ['0', 'w', '0', '-', '-', '-', '0', 'g', '0'], // 01
     ['0', 'W', '0', '-', '-', '-', '0', 'R', '0'], // 02
@@ -126,7 +126,7 @@ let map = [
     ['0', '-', '-', '-', '-', '-', '-', '-', '0'], // 08
     ['0', 'Y', '0', '-', '-', '-', '0', '-', '0'], // 09
     ['0', 'r', '0', '-', '-', '-', '0', 'y', '0'], // 10
-    ['0', '0', '0', '0', '-', '0', '0', '0', '0'],  // 11
+    ['0', '0', '0', '0', '-', '0', '0', '0', '0'], // 11
     ['0', '0', '0', '0', 'C', '0', '0', '0', '0']  // 12
 ];
 
@@ -613,7 +613,7 @@ class Hydra extends Dragon {
 
     // called when an attack "kills" the hydra
     die() {
-        // change the phase of the dragon and replenish health for most phases 5-2
+        // change the phase of the dragon and replenish health for phases 5-2
         // type of effective and resisted attacks change, as well as image
         switch (this.phase) {
             case 5:
@@ -1126,7 +1126,7 @@ function resetGame() {
 function checkForCollisions() {
     // iterates through dragons in the game
     dragons.forEach((d) => {
-        // if player collides with a dragon
+        // if player collides with a dragon, i.e. x and y coordinates are the same
         if(d.alive && d.x === character.x && d.y === character.y) {
             gameEvents.unshift({ text: `${character.name} engages a ${d.name} in glorious combat!`, class: 'emphasis' });
             combat(d); // combat begins
@@ -1135,7 +1135,7 @@ function checkForCollisions() {
 
     // iterates through items in the game
     items.forEach((i) => {
-        // if player collides with an item
+        // if player collides with an item, i.e. x and y coordinates are the same
         if(i.alive && i.x === character.x && i.y === character.y) {
             i.pickup(); // character picks up the item
         }
