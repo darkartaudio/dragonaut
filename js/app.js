@@ -27,21 +27,36 @@ let activeDragon;
 // Initialize array for game events
 // Each event will be an object containing 
 // { 
-    //  text: the event text,
-    //  class: list of classes to apply styling to this event
-    // }
+//  text: the event text,
+//  class: list of classes to apply styling to this event
+// }
 let gameEvents = [];
+    
+// Array of instructions to display on load
+let instructions = [
+    { text: 'Create your character!', class: 'storymsg' },
+    { text: '', class: 'invis' },
+    { text: 'Move around the board using the w-a-s-d keys.', class: 'storymsg' },
+    { text: 'Collect books to gain elemental knowledge.', class: 'storymsg' },
+    { text: 'Move into a square occupied by a dragon to engage it in combat.', class: 'storymsg' },
+    { text: '', class: 'invis' },
+    { text: 'Win the game by slaying all of the dragons!', class: 'storymsg' },
+    { text: `If the character's health falls to zero, the game is over!`, class: 'storymsg' }
+];
 
-// =================================================================================
-// GLOBAL DOM VARIABLES
-// =================================================================================
-
-const game = document.querySelector('#game');
-const story = document.querySelector('#story');
-const storyContainer = document.querySelector('#story-container');
+    // =================================================================================
+    // GLOBAL DOM VARIABLES
+    // =================================================================================
+    
+    const game = document.querySelector('#game');
+    const story = document.querySelector('#story');
+    const storyContainer = document.querySelector('#story-container');
 const choices = document.querySelector('#choices');
 const setupContainer = document.querySelector('#setup-container');
 const setupForm = document.querySelector('#setup-form');
+
+const startButton = setupForm.querySelector('button');
+startButton.disabled = true;
 
 // Set up game status div, which will be displayed when game starts
 const gameStatus = document.createElement('div');
@@ -207,6 +222,9 @@ const gameWinImg = document.createElement('img');
 // launched when player fills out character details and chooses Start Game
 function gameSetup(e) {
     e.preventDefault();
+
+    // stop the instructions interval
+    clearInterval(runGame);
     
     // create new character with name and class as chosen by user,
     // then reset and remove setup form, displaying game status instead
@@ -218,11 +236,13 @@ function gameSetup(e) {
     choices.style.justifyContent = 'left';
     choices.append(gameStatus, attackButtons);
     
-    // clears and then adds game directions to story
+    // clear and then add game directions to story
     initStory();
     gameEvents.unshift({ text: 'Gather items and slay dragons!', class: 'storymsg'});
     gameEvents.unshift({ text: 'a - left | d - right | w - up | s - down', class: 'storymsg'});
-    
+    gameEvents.unshift({ text: '', class: 'invis' });
+    updateStory();
+
     // add dragons and magic items to the game
     addDragons();
     addItems();
@@ -264,12 +284,15 @@ acidButton.addEventListener('click', (e) => {
     character.attack('acid');
 });
 
-// when the page loads, display tagline and draw splash image to canvas
+// when the page loads, display tagline, instructions, and draw splash image to canvas
 window.addEventListener('DOMContentLoaded', () => {
     initStory();
-    gameEvents.unshift({ text: 'Save the countryside from a pack of ravaging dragons!', class: 'storymsg' });
+    gameEvents.unshift({ text: 'Save the countryside from a pack of ravaging dragons!', class: 'emphasis' });
     gameEvents.unshift({ text: '', class: 'invis' });
     gameEvents.unshift({ text: '', class: 'invis' });
+    setTimeout(() => {
+        let runGame = setInterval(displayInstructions, 1000);
+    }, 1500);
     updateStory();
 
     clearCanvas();
@@ -774,6 +797,7 @@ class Item {
                 gameEvents.unshift({ text: `${character.name} gains knowledge of acid!`, class: 'acid' });
                 break;
         }
+        gameEvents.unshift({ text: '', class: 'invis' }); // add a spacer line to the story
         this.alive = false;
     }
 }
@@ -1073,7 +1097,7 @@ function updateStory() {
 // takes a HTML img element
 // slowly draws the img on each square of the canvas in a splash effect
 async function drawAll(imgToDraw) {
-    let delayTime = 50;
+    let delayTime = 25;
     
     clearCanvas();
 
@@ -1086,6 +1110,20 @@ async function drawAll(imgToDraw) {
             // pause before continuing
             await new Promise(r => setTimeout(r, delayTime));
         }
+    }
+}
+
+// called when page loads, displays instructions to story area
+function displayInstructions() {
+    if(instructions.length === 8) { // if we're displaying the first instruction
+        initStory(); // clear story first
+    }
+
+    if(instructions.length > 0) { // if there are instructions left to display
+        gameEvents.unshift(instructions.shift()); // remove the first instruction and display it to story
+        updateStory();
+    } else { // all instructions have been displayed
+        startButton.disabled = false; // enable start game button
     }
 }
 
