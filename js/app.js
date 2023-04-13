@@ -44,13 +44,13 @@ let instructions = [
     { text: `If the character's health falls to zero, the game is over!`, class: 'storymsg' }
 ];
 
-    // =================================================================================
-    // GLOBAL DOM VARIABLES
-    // =================================================================================
-    
-    const game = document.querySelector('#game');
-    const story = document.querySelector('#story');
-    const storyContainer = document.querySelector('#story-container');
+// =================================================================================
+// GLOBAL DOM VARIABLES
+// =================================================================================
+
+const game = document.querySelector('#game');
+const story = document.querySelector('#story');
+const storyContainer = document.querySelector('#story-container');
 const choices = document.querySelector('#choices');
 const setupContainer = document.querySelector('#setup-container');
 const setupForm = document.querySelector('#setup-form');
