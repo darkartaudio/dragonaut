@@ -255,3 +255,5 @@ I'd like to use this game engine to build some longer, more complex levels, with
 ---
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/4f7c989c-6745-4455-a2e9-fb50c005b212/deploy-status)](https://app.netlify.com/sites/dragonaut/deploys)
+
+![CC0](./img/cc0.png)
