@@ -101,6 +101,7 @@ class Hydra extends Dragon {
         this.render(); // redraw the hydra 
         this.phase--; // hydra phase number is decremented
     }
+}
 ```
 
 ### THE MAP
